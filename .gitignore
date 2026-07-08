@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Ambiente
+.venv/
+venv/
+
+# Saída gerada do build da PWA (scripts/build_pwa.py)
+dist/
+
+# Configurações locais de IDE
+.vscode/
+
+# Estado local do Netlify CLI (site id da máquina)
+.netlify/

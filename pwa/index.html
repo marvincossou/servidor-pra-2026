@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#004A80">
+<meta name="description" content="Entenda como funciona sua Premiação por Resultados de Aprendizagem (PRA) 2026.">
+<title>PRA 2026 — Como funciona meu prêmio?</title>
+
+<!-- Open Graph / preview em WhatsApp, redes sociais etc. -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="PRA 2026 — Como funciona meu prêmio?">
+<meta property="og:description" content="Entenda como funciona sua Premiação por Resultados de Aprendizagem (PRA) 2026.">
+<meta property="og:image" content="https://servidor-pra-2026.netlify.app/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://servidor-pra-2026.netlify.app/">
+<meta property="og:locale" content="pt_BR">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<link rel="icon" href="./icons/icon-192.png">
+<link rel="stylesheet" href="./css/app.css">
+</head>
+<body>
+<header class="pra-header">
+  <img src="./assets/logo_sme_rio.png" class="pra-header-logo" alt="Prefeitura do Rio — Secretaria Municipal de Educação">
+  <div class="pra-header-text">
+    <h1 id="titulo-pagina"></h1>
+  </div>
+</header>
+
+<main id="conteudo-principal">
+  <p id="intro"></p>
+
+  <details id="aviso-escopo">
+    <summary id="aviso-escopo-titulo"></summary>
+    <div id="aviso-escopo-conteudo"></div>
+  </details>
+
+  <div id="erro-carregamento" class="alerta alerta-erro" hidden></div>
+
+  <hr>
+
+  <div class="busca-container">
+    <label id="busca-label" for="busca-input"></label>
+    <input type="search" id="busca-input" inputmode="search" autocomplete="off" enterkeyhint="search">
+  </div>
+
+  <p id="busca-dica-vazia" class="alerta alerta-info"></p>
+  <p id="busca-sem-resultado" class="alerta alerta-aviso" hidden></p>
+
+  <ul id="resultados-lista" role="listbox" aria-label="Unidades encontradas" hidden></ul>
+
+  <section id="ficha-unidade" hidden aria-live="polite">
+    <hr>
+    <h2 id="ficha-titulo"></h2>
+
+    <div class="cartao">
+      <p class="cartao-titulo">📍 Dados da unidade</p>
+      <div class="metricas">
+        <div class="metrica">
+          <span class="metrica-rotulo">CRE <span class="ajuda" tabindex="0" data-tip="Coordenadoria Regional de Educação — a regional que administra sua escola.">?</span></span>
+          <span class="metrica-valor" id="metric-cre"></span>
+        </div>
+        <div class="metrica">
+          <span class="metrica-rotulo">Designação <span class="ajuda" tabindex="0" data-tip="Código oficial da unidade na SME (aparece em documentos e contracheques).">?</span></span>
+          <span class="metrica-valor" id="metric-designacao"></span>
+        </div>
+        <div class="metrica">
+          <span class="metrica-rotulo">Tipo de Unidade <span class="ajuda" tabindex="0" data-tip="Classificação da unidade pelas etapas de ensino que oferece.">?</span></span>
+          <span class="metrica-valor" id="metric-tipo"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="cartao">
+      <p class="cartao-titulo">🏫 Etapas/modalidades oferecidas nesta unidade</p>
+      <div id="chips-etapas"></div>
+    </div>
+
+    <details id="glossario">
+      <summary>📖 O que significam as siglas?</summary>
+      <div id="glossario-conteudo" class="conteudo-md"></div>
+    </details>
+
+    <hr>
+    <h2>🧮 Como funciona meu cálculo de PRA?</h2>
+
+    <div class="tabs" role="tablist" aria-label="Seções do cálculo">
+      <button type="button" role="tab" id="tab-caso" aria-selected="true" aria-controls="painel-caso">👤 Meu caso</button>
+      <button type="button" role="tab" id="tab-calculo" aria-selected="false" aria-controls="painel-calculo">🧮 Como é calculado</button>
+      <button type="button" role="tab" id="tab-elegibilidade" aria-selected="false" aria-controls="painel-elegibilidade">📋 Tenho direito?</button>
+    </div>
+
+    <div id="painel-caso" role="tabpanel" aria-labelledby="tab-caso">
+      <fieldset id="fieldset-papel" class="cartoes-radio">
+        <legend>Qual é a sua situação nesta unidade?</legend>
+        <label class="cartao-radio">
+          <input type="radio" name="papel" value="regente" checked>
+          Sou professor regente / Agente de Educação Infantil / Orientador de EJA / professor de Classe Especial ou Sala de Recursos
+        </label>
+        <label class="cartao-radio">
+          <input type="radio" name="papel" value="geral">
+          Estou fora de sala de aula (direção, secretaria, inspeção, apoio, etc.)
+        </label>
+      </fieldset>
+
+      <div id="select-etapa-container">
+        <label for="select-etapa">Qual é o seu cargo/etapa nesta unidade?</label>
+        <select id="select-etapa"></select>
+      </div>
+
+      <p id="sem-etapas-regencia" class="alerta alerta-info" hidden></p>
+      <div id="conteudo-caso" class="conteudo-md"></div>
+    </div>
+
+    <div id="painel-calculo" role="tabpanel" aria-labelledby="tab-calculo" hidden>
+      <h4>Como a nota de cada indicador funciona</h4>
+      <div class="gauge-crescimento">
+        <div class="gauge-crescimento-barra" role="img" aria-label="Régua de nota: abaixo de 80% do crescimento esperado é zero; entre 80% e 100% é proporcional; acima de 100% é nota máxima.">
+          <div class="gauge-zona gauge-zona-zero">0,00</div>
+          <div class="gauge-zona gauge-zona-proporcional">0,80–1,00</div>
+          <div class="gauge-zona gauge-zona-maxima">1,00</div>
+        </div>
+        <div class="gauge-legenda">
+          <span>&lt; 80% do esperado</span>
+          <span>80–100% do esperado</span>
+          <span>≥ 100% do esperado</span>
+        </div>
+      </div>
+      <div id="conteudo-nota-indicador" class="conteudo-md"></div>
+      <div id="conteudo-formula-final" class="conteudo-md"></div>
+    </div>
+
+    <div id="painel-elegibilidade" role="tabpanel" aria-labelledby="tab-elegibilidade" hidden>
+      <div id="conteudo-elegibilidade" class="conteudo-md"></div>
+
+      <hr>
+      <h4>🗓️ Meu afastamento conta como dia não trabalhado?</h4>
+      <div id="conteudo-ausencias-intro" class="conteudo-md"></div>
+
+      <label for="busca-ausencia">Buscar tipo de afastamento</label>
+      <input type="search" id="busca-ausencia" placeholder="Ex.: licença gestante, atestado, férias...">
+
+      <div class="tabela-scroll">
+        <table id="tabela-ausencias">
+          <thead>
+            <tr>
+              <th>Tipo de afastamento</th>
+              <th>Conta como dia não trabalhado?</th>
+              <th>Falta não justificada?</th>
+            </tr>
+          </thead>
+          <tbody id="tabela-ausencias-corpo"></tbody>
+        </table>
+      </div>
+      <p id="ausencias-sem-resultado" class="alerta alerta-aviso" hidden>
+        Nenhum tipo de afastamento encontrado para esse termo de busca.
+      </p>
+    </div>
+
+    <hr>
+    <h2>❓ Dúvidas frequentes</h2>
+    <div id="faq-lista"></div>
+  </section>
+
+  <hr>
+  <details id="transparencia">
+    <summary>🔍 Transparência sobre o texto da norma</summary>
+    <p>A Resolução SME nº 561/2026 tem pontos ambíguos ou incompletos. Em vez
+    de tentar adivinhar a regra que falta, este painel lista os pontos que
+    ainda merecem confirmação oficial antes de qualquer uso definitivo:</p>
+    <div id="transparencia-lista" class="conteudo-md"></div>
+  </details>
+
+  <details id="legislacao">
+    <summary>📄 Legislação</summary>
+    <p>Consulte na íntegra as normas da SME-Rio que tratam da PRA 2026:</p>
+    <ul>
+      <li><a href="./legislacao/resolucao-sme-561-2026-pra.pdf" download>⬇️ Resolução SME nº 561/2026 — regras da PRA 2026</a></li>
+    </ul>
+  </details>
+</main>
+
+<footer>
+  <hr>
+  <p id="rodape-fonte" class="rodape-texto"></p>
+  <p id="rodape-dados-de" class="rodape-texto"></p>
+  <p id="rodape-instalar" class="rodape-texto" hidden></p>
+</footer>
+
+<div id="toast-atualizacao" class="toast" hidden>
+  <span>Nova versão disponível.</span>
+  <button type="button" id="toast-atualizar-btn">Atualizar</button>
+</div>
+
+<script src="./js/app.js"></script>
+</body>
+</html>

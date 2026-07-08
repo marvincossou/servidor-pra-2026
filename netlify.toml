@@ -1,0 +1,13 @@
+[build]
+  command = "pip install -r requirements-build.txt && python scripts/build_pwa.py --saida dist"
+  publish = "dist"
+
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/dados/*"
+  [headers.values]
+    Cache-Control = "no-cache"
