@@ -1,5 +1,50 @@
 # Session Handoff
 
+## Questionário interativo de elegibilidade + acessibilidade — 2026-07-09 (tarde)
+
+Cinco commits (dda9f1f..cafc9db), todos com pytest verde (91 testes):
+
+1. **Toggle de tema claro/escuro/auto** — cores do tema viraram variáveis
+   CSS (dois blocos idênticos: media query p/ modo auto + `data-tema` p/
+   forçado — manter em sincronia); botão de 3 estados no header persiste em
+   `localStorage["pra-tema"]`, script anti-FOUC no `<head>`. Textos
+   secundários (#555/#666) agora usam `--texto-suave` (contraste no escuro).
+2. **Busca de escola virou combobox ARIA** (padrão APG): setas movem a
+   seleção via `aria-activedescendant`, Enter seleciona, Escape fecha;
+   itens são `role="option"` (antes eram buttons dentro de listbox). Foco
+   move para `#ficha-titulo` (tabindex=-1) ao selecionar; `aria-live`
+   removido da ficha.
+3. **Motor do questionário** (`src/regras_pra_2026.py`):
+   `CRITERIOS_ELEGIBILIDADE` é a fonte única (o texto corrido
+   `explicar_elegibilidade` deriva dela); `avaliar_elegibilidade` com
+   precedência inelegivel > ctrh > atende; pontos ambíguos (falta,
+   avaliação de gestor) nunca dão negativa categórica — vão para a CTRH.
+4. **Build pré-computa a tabela**: 192 combinações de respostas → tabela
+   chave("s"/"n"/"x")→índice + conclusões HTML deduplicadas em
+   `estaticos.json`. Teste de paridade exaustivo. Se o questionário passar
+   de ~10 perguntas, migrar para lógica em JS com paridade via Node.
+5. **UI**: aba "Tenho direito?" agora é o questionário sim/não (a pergunta
+   do gestor só aparece p/ quem foi Diretor IV); conclusão em
+   `role="status"` aria-live; disclaimer permanente; texto corrido mantido
+   em `<details>`. JS só monta a chave e faz lookup — zero regra de negócio.
+
+Antes disso (mesma tarde): removida a seção "Meu afastamento conta como dia
+não trabalhado?" (feature inteira: HTML/JS/CSS/`src/ausencias.py`/testes) e
+o parentetico "(mecanismo de outros órgãos)" da pergunta sobre AR (8b88777,
+já publicado no servidor de casa). **Os 5 commits novos ainda NÃO foram
+publicados** — nem push ao GitHub nem deploy no servidor de casa.
+
+**Ambiente Windows**: Python agora instalado em
+`C:\Users\03023454\AppData\Local\Programs\PythonEmbed313\python.exe`
+(distribuição embeddable — o MSI é bloqueado por política corporativa; o
+stub `python` da Microsoft Store não funciona). Tem pip e as dependências
+do projeto; um `.pth` aponta para a raiz do projeto.
+
+**Pendências desta entrega**: (a) push + deploy (scp p/ o servidor de
+casa; Netlify volta ~22/07); (b) verificação manual no navegador —
+questionário nos 3 desfechos, teclado na busca, toggle de tema nos 3
+estados, NVDA/VoiceOver, layout 360/480px.
+
 ## Status (2026-07-09)
 
 MVP da PRA 2026 + busca por assunto respondida por IA (Groq), citando a
