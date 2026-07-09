@@ -41,31 +41,33 @@
 
   <div id="erro-carregamento" class="alerta alerta-erro" hidden></div>
 
-  <hr>
+  <section class="secao-busca secao-busca--ia">
+    <p class="secao-busca-etiqueta">✨ Pergunte com IA</p>
+    <div class="busca-container">
+      <label id="busca-assunto-label" for="busca-assunto-input"></label>
+      <input type="search" id="busca-assunto-input" inputmode="search" autocomplete="off" enterkeyhint="search">
+    </div>
 
-  <div class="busca-container">
-    <label id="busca-assunto-label" for="busca-assunto-input"></label>
-    <input type="search" id="busca-assunto-input" inputmode="search" autocomplete="off" enterkeyhint="search">
-  </div>
+    <p id="busca-assunto-dica-vazia" class="alerta alerta-info"></p>
 
-  <p id="busca-assunto-dica-vazia" class="alerta alerta-info"></p>
+    <button type="button" id="botao-perguntar-ia" class="botao-ia" hidden></button>
+    <p id="ia-status" class="alerta alerta-info" hidden></p>
+    <div id="resposta-ia" hidden>
+      <div id="resposta-ia-conteudo" class="conteudo-md"></div>
+      <p id="ia-disclaimer" class="alerta alerta-aviso"></p>
+    </div>
+  </section>
 
-  <button type="button" id="botao-perguntar-ia" class="botao-ia" hidden></button>
-  <p id="ia-status" class="alerta alerta-info" hidden></p>
-  <div id="resposta-ia" hidden>
-    <div id="resposta-ia-conteudo" class="conteudo-md"></div>
-    <p id="ia-disclaimer" class="alerta alerta-aviso"></p>
-  </div>
+  <section class="secao-busca secao-busca--escola">
+    <p class="secao-busca-etiqueta">🏫 Encontre sua escola</p>
+    <div class="busca-container">
+      <label id="busca-label" for="busca-input"></label>
+      <input type="search" id="busca-input" inputmode="search" autocomplete="off" enterkeyhint="search">
+    </div>
 
-  <hr>
-
-  <div class="busca-container">
-    <label id="busca-label" for="busca-input"></label>
-    <input type="search" id="busca-input" inputmode="search" autocomplete="off" enterkeyhint="search">
-  </div>
-
-  <p id="busca-dica-vazia" class="alerta alerta-info"></p>
-  <p id="busca-sem-resultado" class="alerta alerta-aviso" hidden></p>
+    <p id="busca-dica-vazia" class="alerta alerta-info"></p>
+    <p id="busca-sem-resultado" class="alerta alerta-aviso" hidden></p>
+  </section>
 
   <ul id="resultados-lista" role="listbox" aria-label="Unidades encontradas" hidden></ul>
 

@@ -33,7 +33,7 @@ ERRO_CARREGAMENTO_BASE = (
     "mais tarde."
 )
 
-BUSCA_LABEL = "🔎 Busque sua unidade por designação, nome da escola, sigla ou setor"
+BUSCA_LABEL = "Busque sua unidade por designação, nome da escola, sigla ou setor"
 BUSCA_PLACEHOLDER = "Ex.: 1010001, 10.10.001, Vicente Licínio, E/1ª CRE..."
 
 BUSCA_DICA_VAZIA = (
@@ -47,7 +47,7 @@ BUSCA_SEM_RESULTADO = (
     "digitar só uma palavra do nome, ou o código sem pontos."
 )
 
-BUSCA_ASSUNTO_LABEL = "🔎 Buscar um assunto sobre a PRA (ex.: IDERio, tenho direito, falta, fator geral)"
+BUSCA_ASSUNTO_LABEL = "Buscar um assunto sobre a PRA (ex.: IDERio, tenho direito, falta, fator geral)"
 BUSCA_ASSUNTO_PLACEHOLDER = "Ex.: tenho direito, o que é IDERio, falta conta contra mim..."
 
 BUSCA_ASSUNTO_DICA_VAZIA = (

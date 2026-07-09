@@ -91,6 +91,31 @@ summary {
 .alerta-aviso { background: #fff4e0; color: #6b4500; }
 .alerta-erro { background: #fde8e8; color: #7a1414; }
 
+.secao-busca {
+  border: 1px solid var(--borda);
+  border-radius: 16px;
+  padding: 18px 16px 4px;
+  margin: 20px 0;
+}
+
+.secao-busca--ia {
+  background: var(--fundo-chip);
+  border-color: var(--borda-chip);
+}
+
+.secao-busca--escola {
+  background: var(--fundo-alt);
+}
+
+.secao-busca-etiqueta {
+  margin: 0 0 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--azul);
+}
+
 .busca-container { margin: 16px 0 8px; }
 
 #busca-label {
