@@ -45,12 +45,14 @@
     <p class="secao-busca-etiqueta">✨ Esclareça sua dúvida sobre a legislação relativa ao PRA</p>
     <div class="busca-container">
       <label id="busca-assunto-label" for="busca-assunto-input"></label>
-      <input type="search" id="busca-assunto-input" inputmode="search" autocomplete="off" enterkeyhint="search">
+      <div class="busca-linha">
+        <input type="search" id="busca-assunto-input" inputmode="search" autocomplete="off" enterkeyhint="search">
+        <button type="button" id="botao-perguntar-ia" class="botao-lupa" hidden><span aria-hidden="true">🔍</span></button>
+      </div>
     </div>
 
     <p id="busca-assunto-dica-vazia" class="alerta alerta-info"></p>
 
-    <button type="button" id="botao-perguntar-ia" class="botao-ia" hidden></button>
     <p id="ia-status" class="alerta alerta-info" hidden></p>
     <div id="resposta-ia" hidden>
       <div id="resposta-ia-conteudo" class="conteudo-md"></div>

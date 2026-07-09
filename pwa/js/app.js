@@ -334,7 +334,8 @@
     els.buscaAssuntoLabel.textContent = t.busca_assunto_label;
     els.buscaAssuntoInput.placeholder = t.busca_assunto_placeholder;
     els.buscaAssuntoDicaVazia.innerHTML = t.busca_assunto_dica_vazia_html;
-    els.botaoPerguntarIA.textContent = t.botao_perguntar_ia;
+    els.botaoPerguntarIA.setAttribute("aria-label", t.botao_perguntar_ia);
+    els.botaoPerguntarIA.title = t.botao_perguntar_ia;
     els.semEtapasRegencia.innerHTML = t.sem_etapas_regencia_html;
     els.rodapeFonte.textContent = t.rodape_fonte;
     els.rodapeDadosDe.textContent = `Dados de ${dados.unidades.dados_de}.`;
