@@ -101,7 +101,7 @@ summary {
   margin-bottom: 8px;
 }
 
-#busca-input {
+.busca-container input[type="search"] {
   width: 100%;
   font-size: 1.1rem;
   padding: 16px 18px;
@@ -110,7 +110,7 @@ summary {
   background: var(--fundo-alt);
 }
 
-#busca-input:focus {
+.busca-container input[type="search"]:focus {
   outline: none;
   border-color: var(--azul-claro);
   box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.25);
@@ -148,18 +148,20 @@ summary {
   display: block;
   width: 100%;
   text-align: center;
-  background: var(--fundo-alt);
-  border: 1px solid var(--borda);
+  background: var(--azul);
+  color: #fff;
+  border: none;
   border-radius: 12px;
-  padding: 12px 16px;
-  font-size: 1rem;
-  min-height: 44px;
+  padding: 14px 16px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  min-height: 48px;
   cursor: pointer;
   margin: 8px 0 16px;
 }
 
 .botao-ia:hover, .botao-ia:focus {
-  background: var(--fundo);
+  background: var(--azul-claro);
 }
 
 .botao-ia:disabled {

@@ -2,19 +2,34 @@
 
 ## Status (2026-07-09)
 
-MVP da PRA 2026 + busca por assunto (TF-IDF client-side) + resposta em
-linguagem natural via IA (Groq) citando a legislação. Netlify já conectado
-ao GitHub (deploy contínuo) — falta só o usuário configurar a API key da
-Groq para a parte de IA funcionar em produção (ver "Pendências").
+MVP da PRA 2026 + busca por assunto respondida por IA (Groq), citando a
+legislação. Netlify conectado ao GitHub (deploy contínuo) e `GROQ_API_KEY`
+já configurada em produção — testado ao vivo e funcionando.
+
+## Busca por assunto: só IA (sem TF-IDF client-side) — 2026-07-09
+
+A primeira versão da busca por assunto tinha duas camadas: TF-IDF/sinônimos
+no navegador (instantâneo, sem IA) + um botão extra para perguntar à IA. A
+pedido do usuário, a camada TF-IDF foi **removida** — a busca por assunto
+agora é só via IA (Groq), acionada pelo botão **"Buscar resposta"** (sem
+ícone) ou tecla Enter no campo de busca. Documentos removidos do DOM:
+`#busca-assunto-resultados`, `#busca-assunto-sem-resultado`. Funções
+removidas de `pwa/js/app.js`: `tokenizar`, `construirIndiceBusca`,
+`buscarAssunto`, `renderResultadosAssunto`. `busca.json` continua existindo
+(gerado por `src/busca_legislacao.py`/`scripts/build_pwa.py`) porque a
+Netlify Function `perguntar.js` ainda o usa como contexto para a IA, e o
+cliente ainda carrega os títulos dos documentos (`titulosDocumentos`) só
+para destacar citações na resposta.
+
+Também deixamos o botão e os dois campos de busca (escola e assunto) mais
+destacados visualmente — botão com fundo azul sólido (`var(--azul)`) e
+texto branco em vez do estilo discreto anterior; `#busca-input` e
+`#busca-assunto-input` agora compartilham o mesmo seletor CSS
+(`.busca-container input[type="search"]`) com borda azul grossa.
 
 ## Pendências (só o usuário consegue fazer)
 
-1. Criar conta em **console.groq.com**, gerar uma API key.
-2. Adicionar `GROQ_API_KEY` (e opcionalmente `GROQ_MODEL`, padrão
-   `llama-3.3-70b-versatile`) em **Netlify → servidor-pra-2026 → Site
-   configuration → Environment variables**. Sem isso, o botão "🤖 Perguntar
-   para a IA" sempre cai no fallback de erro amigável (comportamento já
-   verificado e correto, só falta a chave para responder de verdade).
+Nenhuma no momento — Groq configurada e testada em produção.
 
 ## Resposta por IA (Groq) — 2026-07-09
 

@@ -51,16 +51,11 @@ BUSCA_ASSUNTO_LABEL = "🔎 Buscar um assunto sobre a PRA (ex.: IDERio, tenho di
 BUSCA_ASSUNTO_PLACEHOLDER = "Ex.: tenho direito, o que é IDERio, falta conta contra mim..."
 
 BUSCA_ASSUNTO_DICA_VAZIA = (
-    "Digite uma palavra ou pergunta sobre a PRA (ex.: **tenho direito**, "
-    "**IDERio**, **CRE**, **falta**, **fator geral**)."
+    "Digite sua pergunta sobre a PRA (ex.: **tenho direito**, **o que é "
+    "IDERio**, **o que conta como falta**) e clique em **Buscar resposta**."
 )
 
-BUSCA_ASSUNTO_SEM_RESULTADO = (
-    "Nenhum assunto encontrado para esse termo. Tente uma palavra mais "
-    "simples, ou consulte a seção Legislação ao final da página."
-)
-
-BOTAO_PERGUNTAR_IA = "🤖 Perguntar para a IA"
+BOTAO_PERGUNTAR_IA = "Buscar resposta"
 IA_CARREGANDO = "Consultando a IA…"
 IA_DISCLAIMER = (
     "⚠️ Resposta gerada por IA a partir dos textos deste painel — pode conter "
@@ -68,7 +63,7 @@ IA_DISCLAIMER = (
 )
 IA_ERRO = (
     "😕 Não foi possível obter uma resposta da IA agora. Tente novamente mais "
-    "tarde, ou use a busca por palavra-chave acima."
+    "tarde."
 )
 
 SEM_ETAPAS_REGENCIA = (

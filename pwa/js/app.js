@@ -17,8 +17,6 @@
     buscaAssuntoLabel: document.getElementById("busca-assunto-label"),
     buscaAssuntoInput: document.getElementById("busca-assunto-input"),
     buscaAssuntoDicaVazia: document.getElementById("busca-assunto-dica-vazia"),
-    buscaAssuntoSemResultado: document.getElementById("busca-assunto-sem-resultado"),
-    buscaAssuntoResultados: document.getElementById("busca-assunto-resultados"),
     botaoPerguntarIA: document.getElementById("botao-perguntar-ia"),
     iaStatus: document.getElementById("ia-status"),
     respostaIA: document.getElementById("resposta-ia"),
@@ -62,8 +60,7 @@
   let perfilAtual = null;
   let debounceId = null;
   let debounceAusenciasId = null;
-  let debounceAssuntoId = null;
-  let indiceBusca = null; // { documentos, idf } construído a partir de dados.busca
+  let titulosDocumentos = []; // títulos dos documentos de dados.busca, usados para destacar citações
 
   const REGEX_NAO_ASCII = new RegExp("[^\\x00-\\x7F]", "g");
 
@@ -147,114 +144,13 @@
     }
   }
 
-  function tokenizar(texto) {
-    return normalizar(texto).split(/[^a-z0-9]+/).filter(Boolean);
-  }
-
-  // Índice de busca por assunto: TF-IDF simples sobre um corpus pequeno,
-  // calculado inteiramente no navegador (nenhuma chamada de IA em tempo de
-  // execução). Título e sinônimos pesam mais que o corpo do texto.
-  function construirIndiceBusca(documentos) {
-    const docsProcessados = documentos.map((doc) => {
-      const freq = new Map();
-      for (const token of tokenizar(doc.titulo)) {
-        freq.set(token, (freq.get(token) || 0) + 3);
-      }
-      const corpo = [doc.texto, ...(doc.sinonimos || [])].join(" ");
-      for (const token of tokenizar(corpo)) {
-        freq.set(token, (freq.get(token) || 0) + 1);
-      }
-      return { doc, freq };
-    });
-
-    const docFreq = new Map();
-    for (const { freq } of docsProcessados) {
-      for (const token of freq.keys()) {
-        docFreq.set(token, (docFreq.get(token) || 0) + 1);
-      }
-    }
-
-    const total = docsProcessados.length;
-    const idf = new Map();
-    for (const [token, df] of docFreq) {
-      idf.set(token, Math.log((total + 1) / (df + 0.5)));
-    }
-
-    return { docsProcessados, idf };
-  }
-
-  function buscarAssunto(termo) {
-    const tokensConsulta = tokenizar(termo);
-    if (tokensConsulta.length === 0) return [];
-
-    const pontuacoes = [];
-    for (const { doc, freq } of indiceBusca.docsProcessados) {
-      let pontuacao = 0;
-      for (const token of tokensConsulta) {
-        const tf = freq.get(token) || 0;
-        if (tf === 0) continue;
-        pontuacao += tf * (indiceBusca.idf.get(token) || 0);
-      }
-      if (pontuacao > 0) pontuacoes.push({ doc, pontuacao });
-    }
-
-    pontuacoes.sort((a, b) => b.pontuacao - a.pontuacao);
-    return pontuacoes.slice(0, 8).map((p) => p.doc);
-  }
-
-  function renderResultadosAssunto(lista) {
-    els.buscaAssuntoResultados.innerHTML = "";
-    if (lista.length === 0) {
-      els.buscaAssuntoResultados.hidden = true;
-      return;
-    }
-    els.buscaAssuntoResultados.hidden = false;
-
-    for (const doc of lista) {
-      const details = document.createElement("details");
-      const summary = document.createElement("summary");
-      summary.textContent = doc.titulo;
-      const div = document.createElement("div");
-      div.className = "conteudo-md";
-      div.innerHTML = doc.html;
-      details.appendChild(summary);
-      details.appendChild(div);
-
-      if (doc.id === "cargo-especifico") {
-        details.addEventListener("toggle", () => {
-          if (!details.open) return;
-          els.buscaInput.scrollIntoView({ behavior: "smooth", block: "center" });
-          els.buscaInput.focus();
-        });
-      }
-
-      els.buscaAssuntoResultados.appendChild(details);
-    }
-  }
-
   function tratarBuscaAssunto() {
     const termo = els.buscaAssuntoInput.value;
 
     els.botaoPerguntarIA.hidden = !termo;
     els.iaStatus.hidden = true;
     els.respostaIA.hidden = true;
-
-    if (!termo) {
-      els.buscaAssuntoDicaVazia.hidden = false;
-      els.buscaAssuntoSemResultado.hidden = true;
-      els.buscaAssuntoResultados.hidden = true;
-      return;
-    }
-    els.buscaAssuntoDicaVazia.hidden = true;
-
-    const resultados = buscarAssunto(termo);
-    if (resultados.length === 0) {
-      els.buscaAssuntoSemResultado.hidden = false;
-      els.buscaAssuntoResultados.hidden = true;
-      return;
-    }
-    els.buscaAssuntoSemResultado.hidden = true;
-    renderResultadosAssunto(resultados);
+    els.buscaAssuntoDicaVazia.hidden = Boolean(termo);
   }
 
   function escaparHtml(texto) {
@@ -265,8 +161,8 @@
 
   function destacarTitulosConhecidos(textoEscapado) {
     let resultado = textoEscapado;
-    for (const { doc } of indiceBusca.docsProcessados) {
-      const tituloEscapado = escaparHtml(doc.titulo);
+    for (const titulo of titulosDocumentos) {
+      const tituloEscapado = escaparHtml(titulo);
       if (!tituloEscapado || !resultado.includes(tituloEscapado)) continue;
       resultado = resultado.split(tituloEscapado).join(`<strong>${tituloEscapado}</strong>`);
     }
@@ -438,7 +334,6 @@
     els.buscaAssuntoLabel.textContent = t.busca_assunto_label;
     els.buscaAssuntoInput.placeholder = t.busca_assunto_placeholder;
     els.buscaAssuntoDicaVazia.innerHTML = t.busca_assunto_dica_vazia_html;
-    els.buscaAssuntoSemResultado.textContent = t.busca_assunto_sem_resultado;
     els.botaoPerguntarIA.textContent = t.botao_perguntar_ia;
     els.semEtapasRegencia.innerHTML = t.sem_etapas_regencia_html;
     els.rodapeFonte.textContent = t.rodape_fonte;
@@ -545,7 +440,7 @@
       return;
     }
 
-    indiceBusca = construirIndiceBusca(dados.busca.documentos);
+    titulosDocumentos = dados.busca.documentos.map((doc) => doc.titulo);
 
     renderTextosEstaticos();
     configurarTabs();
@@ -556,9 +451,9 @@
       debounceId = setTimeout(tratarBusca, 150);
     });
 
-    els.buscaAssuntoInput.addEventListener("input", () => {
-      clearTimeout(debounceAssuntoId);
-      debounceAssuntoId = setTimeout(tratarBuscaAssunto, 150);
+    els.buscaAssuntoInput.addEventListener("input", tratarBuscaAssunto);
+    els.buscaAssuntoInput.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter" && !els.botaoPerguntarIA.hidden) perguntarIA();
     });
 
     els.botaoPerguntarIA.addEventListener("click", perguntarIA);
