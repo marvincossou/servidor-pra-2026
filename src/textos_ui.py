@@ -58,8 +58,7 @@ BUSCA_ASSUNTO_DICA_VAZIA = (
 BOTAO_PERGUNTAR_IA = "Buscar resposta"
 IA_CARREGANDO = "Consultando a IA…"
 IA_DISCLAIMER = (
-    "⚠️ Resposta gerada por IA a partir dos textos deste painel — pode conter "
-    "erros. Confirme com a CTRH da sua CRE antes de tomar qualquer decisão."
+    "⚠️ Resposta gerada por IA a partir dos textos deste painel — pode conter erros."
 )
 IA_ERRO = (
     "😕 Não foi possível obter uma resposta da IA agora. Tente novamente mais "
@@ -68,8 +67,7 @@ IA_ERRO = (
 
 SEM_ETAPAS_REGENCIA = (
     "Não há etapas/modalidades de regência identificadas para esta "
-    "unidade. Selecione 'Estou fora de sala de aula' ou consulte a CTRH "
-    "(Comissão Técnica de Recursos Humanos da sua CRE)."
+    "unidade. Selecione 'Estou fora de sala de aula'."
 )
 
 RODAPE_FONTE = "Fonte: Resolução SME nº 561/2026 (PRA 2026)."

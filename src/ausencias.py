@@ -37,7 +37,7 @@ INTRO_AUSENCIAS = (
     "Resolução SME nº 561/2026 (Art. 8º, III) diz apenas que **ter "
     "apresentado falta em 2026** tira o direito à PRA, sem detalhar "
     "quantidade ou tipo — por isso, use esta tabela apenas como referência "
-    "operacional, e confirme seu caso específico com a CTRH da sua CRE."
+    "operacional."
 )
 
 

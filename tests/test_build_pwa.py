@@ -217,4 +217,4 @@ def test_ausencias_no_build_bate_com_o_motor(build):
 
 
 def test_ausencias_intro_presente_no_build(build):
-    assert "CTRH" in build["estaticos"]["ausencias_intro_html"]
+    assert "Art. 8" in build["estaticos"]["ausencias_intro_html"]

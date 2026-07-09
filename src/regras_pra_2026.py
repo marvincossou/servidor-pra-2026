@@ -183,7 +183,7 @@ PENDENCIAS_VERIFICACAO = [
             "O Art. 8º, III fala apenas em 'ter apresentado falta no ano de "
             "2026', sem definir quantidade, tipo (justificada ou não) ou se é "
             "cumulativo. O texto não deixa claro se uma única falta abonada já "
-            "tira o direito à gratificação. Consulte a CTRH para o seu caso."
+            "tira o direito à gratificação."
         ),
     },
     {
@@ -348,9 +348,8 @@ def explicar_fator_geral(unidade: pd.Series) -> str:
                 "⚠️ O texto do Art. 16, §2º associa esse bônus ao \"indicador do "
                 "inciso VII do art. 9º\", mas o inciso VII trata do Indicador de "
                 "Rendimento dos Anos Iniciais, não do Plano das Dimensões (que é "
-                "o inciso IX). Veja a seção **Transparência sobre o texto da "
-                "norma** para mais detalhes — este painel descreve a regra como "
-                "publicada, sem tentar corrigir a referência.\n\n"
+                "o inciso IX). Este painel descreve a regra como publicada, sem "
+                "tentar corrigir a referência.\n\n"
             )
         else:
             modalidades_fmt = ", ".join(ETAPA_LABELS[m] for m in modalidades_pd)
@@ -361,16 +360,13 @@ def explicar_fator_geral(unidade: pd.Series) -> str:
                 "exclusivamente de EF (alínea 'a'), unidades com EF "
                 "concomitante a Infantil e/ou EJA (alínea 'b'), e unidades "
                 "sem EF (alínea 'c'). Este caso específico não está coberto "
-                "por nenhuma das três alíneas — consulte a CTRH da sua CRE "
-                "para confirmar como o Fator Geral é calculado aqui.\n\n"
+                "por nenhuma das três alíneas.\n\n"
             )
 
     else:
         texto += (
             "⚠️ Não foi possível identificar etapas de Ensino Fundamental "
-            "nem modalidades de Plano das Dimensões para esta unidade. "
-            "Consulte a CTRH da sua CRE para confirmar como o Fator Geral é "
-            "calculado neste caso.\n\n"
+            "nem modalidades de Plano das Dimensões para esta unidade.\n\n"
         )
 
     texto += f"_Referência: {REFERENCIA}_"
@@ -423,7 +419,7 @@ def explicar_professor(unidade: pd.Series, etapa: str) -> str:
             "- **Indicador IX**: taxa de execução das ações válidas do PD de "
             "Educação Infantil\n\n"
             "**Elegibilidade individual:** aplica-se a Agentes de Educação "
-            "Infantil lotados na unidade. Caso contrário, consulte a CTRH.\n\n"
+            "Infantil lotados na unidade.\n\n"
         )
 
     elif etapa == "EJA":
@@ -434,7 +430,7 @@ def explicar_professor(unidade: pd.Series, etapa: str) -> str:
             "O componente é:\n\n"
             "- **Indicador IX**: taxa de execução das ações válidas do PD de EJA\n\n"
             "**Elegibilidade individual:** aplica-se a Professores "
-            "Orientadores de EJA lotados na unidade. Caso contrário, consulte a CTRH.\n\n"
+            "Orientadores de EJA lotados na unidade.\n\n"
         )
 
     elif etapa == "EE_CE_SRM":
@@ -448,7 +444,7 @@ def explicar_professor(unidade: pd.Series, etapa: str) -> str:
                 "ver como isso é calculado nesta unidade.\n\n"
                 "**Elegibilidade individual:** aplica-se a professores de "
                 "Classe Especial e Sala de Recursos em unidades com turmas de "
-                "Ensino Fundamental. Caso contrário, consulte a CTRH.\n\n"
+                "Ensino Fundamental.\n\n"
             )
         else:
             texto = (
@@ -461,7 +457,7 @@ def explicar_professor(unidade: pd.Series, etapa: str) -> str:
                 "de Educação Especial\n\n"
                 "**Elegibilidade individual:** aplica-se a professores de "
                 "Classe Especial e Sala de Recursos em unidades sem turmas de "
-                "Ensino Fundamental. Caso contrário, consulte a CTRH.\n\n"
+                "Ensino Fundamental.\n\n"
             )
 
     else:
@@ -512,7 +508,7 @@ def explicar_elegibilidade() -> str:
         "- ❌ Você foi **exonerado com perda do vínculo ou demitido** antes da "
         "data de pagamento da gratificação?\n"
         "- ❌ Você **apresentou falta** em 2026? *(o texto da norma não detalha "
-        "quantidade/tipo — veja a seção de afastamentos abaixo e confirme com a CTRH)*\n\n"
+        "quantidade/tipo — veja a seção de afastamentos abaixo)*\n\n"
         "As marcadas com ✅ precisam ser \"sim\"; as marcadas com ❌ precisam "
         "ser \"não\".\n\n"
         "**Se você foi Diretor IV em algum momento de 2026:** há uma condição "
