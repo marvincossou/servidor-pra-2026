@@ -49,6 +49,7 @@
     rodapeInstalar: document.getElementById("rodape-instalar"),
     toast: document.getElementById("toast-atualizacao"),
     toastBtn: document.getElementById("toast-atualizar-btn"),
+    botaoTema: document.getElementById("botao-tema"),
   };
 
   let dados = null; // { unidades, perfis, estaticos, busca }
@@ -403,6 +404,42 @@
       });
   }
 
+  function configurarTema() {
+    const rotulos = { auto: "🌗 Tema: automático", claro: "☀️ Tema: claro", escuro: "🌙 Tema: escuro" };
+    const ordem = ["auto", "claro", "escuro"];
+    const mediaEscuro = window.matchMedia("(prefers-color-scheme: dark)");
+
+    function temaAtual() {
+      const t = document.documentElement.dataset.tema;
+      return t === "claro" || t === "escuro" ? t : "auto";
+    }
+
+    function aplicar(tema) {
+      if (tema === "auto") {
+        delete document.documentElement.dataset.tema;
+      } else {
+        document.documentElement.dataset.tema = tema;
+      }
+      try {
+        if (tema === "auto") localStorage.removeItem("pra-tema");
+        else localStorage.setItem("pra-tema", tema);
+      } catch (e) {
+        // Modo privado sem localStorage: o tema vale só para esta visita.
+      }
+      els.botaoTema.textContent = rotulos[tema];
+      const escuroEfetivo = tema === "escuro" || (tema === "auto" && mediaEscuro.matches);
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.content = escuroEfetivo ? "#14181f" : "#004A80";
+    }
+
+    els.botaoTema.addEventListener("click", () => {
+      aplicar(ordem[(ordem.indexOf(temaAtual()) + 1) % ordem.length]);
+    });
+    mediaEscuro.addEventListener("change", () => aplicar(temaAtual()));
+
+    aplicar(temaAtual());
+  }
+
   function mostrarDicaInstalacaoIOS() {
     const ehIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
     const jaInstalado = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone;
@@ -447,5 +484,6 @@
     mostrarDicaInstalacaoIOS();
   }
 
+  configurarTema();
   iniciar();
 })();

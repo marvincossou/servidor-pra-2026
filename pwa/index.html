@@ -18,6 +18,9 @@
 <meta property="og:locale" content="pt_BR">
 <meta name="twitter:card" content="summary_large_image">
 
+<!-- Aplica o tema salvo antes do CSS carregar, para evitar flash de tema errado. -->
+<script>try{var t=localStorage.getItem("pra-tema");if(t==="claro"||t==="escuro")document.documentElement.dataset.tema=t}catch(e){}</script>
+
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
 <link rel="icon" href="./icons/icon-192.png">
@@ -29,6 +32,7 @@
   <div class="pra-header-text">
     <h1 id="titulo-pagina"></h1>
   </div>
+  <button type="button" id="botao-tema" class="botao-tema"></button>
 </header>
 
 <main id="conteudo-principal">

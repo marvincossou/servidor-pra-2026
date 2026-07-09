@@ -9,6 +9,7 @@ venv/
 
 # Saída gerada do build da PWA (scripts/build_pwa.py)
 dist/
+dist_deploy/
 
 # Configurações locais de IDE
 .vscode/

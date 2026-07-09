@@ -4,9 +4,19 @@
   --fundo-chip: #eaf2ff;
   --borda-chip: #c9ddff;
   --texto: #1a1a1a;
+  --texto-suave: #555;
   --fundo: #ffffff;
   --fundo-alt: #f6f9ff;
+  --fundo-controle: #ffffff;
   --borda: #d8e2f0;
+  --alerta-info-fundo: #e8f1fd;
+  --alerta-info-texto: #0b3d66;
+  --alerta-aviso-fundo: #fff4e0;
+  --alerta-aviso-texto: #6b4500;
+  --alerta-erro-fundo: #fde8e8;
+  --alerta-erro-texto: #7a1414;
+  --alerta-ok-fundo: #e6f4ea;
+  --alerta-ok-texto: #1d5c33;
 }
 
 * { box-sizing: border-box; }
@@ -29,6 +39,7 @@ main, footer {
 }
 
 .pra-header {
+  position: relative;
   background-color: var(--azul);
   padding: 16px 24px;
   display: flex;
@@ -87,9 +98,10 @@ summary {
   padding: 12px 16px;
   margin: 12px 0;
 }
-.alerta-info { background: #e8f1fd; color: #0b3d66; }
-.alerta-aviso { background: #fff4e0; color: #6b4500; }
-.alerta-erro { background: #fde8e8; color: #7a1414; }
+.alerta-info { background: var(--alerta-info-fundo); color: var(--alerta-info-texto); }
+.alerta-aviso { background: var(--alerta-aviso-fundo); color: var(--alerta-aviso-texto); }
+.alerta-erro { background: var(--alerta-erro-fundo); color: var(--alerta-erro-texto); }
+.alerta-ok { background: var(--alerta-ok-fundo); color: var(--alerta-ok-texto); }
 
 .secao-busca {
   border: 1px solid var(--borda);
@@ -158,6 +170,7 @@ summary {
   width: 100%;
   text-align: left;
   background: var(--fundo);
+  color: var(--texto);
   border: none;
   padding: 14px 16px;
   font-size: 1rem;
@@ -221,7 +234,7 @@ summary {
 .metrica-rotulo {
   display: block;
   font-size: 0.85rem;
-  color: #555;
+  color: var(--texto-suave);
 }
 
 .metrica-valor {
@@ -287,7 +300,7 @@ summary {
   background: none;
   font-size: 0.95rem;
   font-weight: 600;
-  color: #555;
+  color: var(--texto-suave);
   border-bottom: 3px solid transparent;
   cursor: pointer;
   white-space: normal;
@@ -352,6 +365,8 @@ summary {
   border-radius: 10px;
   border: 1px solid var(--borda);
   min-height: 44px;
+  background: var(--fundo-controle);
+  color: var(--texto);
 }
 
 .conteudo-md h2, .conteudo-md h3, .conteudo-md h4, .conteudo-md h5 {
@@ -380,7 +395,7 @@ footer { margin-top: 32px; padding-bottom: 32px; }
 
 .rodape-texto {
   font-size: 0.85rem;
-  color: #666;
+  color: var(--texto-suave);
   margin: 4px 0;
 }
 
@@ -443,27 +458,77 @@ footer { margin-top: 32px; padding-bottom: 32px; }
   display: flex;
   justify-content: space-between;
   font-size: 0.75rem;
-  color: #666;
+  color: var(--texto-suave);
   margin-top: 6px;
+}
+
+.botao-tema {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.botao-tema:hover, .botao-tema:focus {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+@media (max-width: 480px) {
+  .pra-header { padding-top: 64px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   * { scroll-behavior: auto !important; }
 }
 
+/* Tema escuro: os DOIS blocos abaixo devem permanecer idênticos —
+   o primeiro atende o modo automático (segue o sistema, salvo se o
+   usuário forçou "claro"), o segundo o modo escuro forçado via toggle. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-tema="claro"]) {
     --texto: #e8e8e8;
+    --texto-suave: #aab2c0;
     --fundo: #14181f;
     --fundo-alt: #1c2430;
+    --fundo-controle: #1c2430;
     --borda: #2c3648;
     --fundo-chip: #1c2c44;
     --borda-chip: #2f4d78;
+    --alerta-info-fundo: #142c42;
+    --alerta-info-texto: #bcdcfc;
+    --alerta-aviso-fundo: #402f10;
+    --alerta-aviso-texto: #ffdd9c;
+    --alerta-erro-fundo: #3a1414;
+    --alerta-erro-texto: #ffb4b4;
+    --alerta-ok-fundo: #12331e;
+    --alerta-ok-texto: #a4dcb5;
   }
-  .resultado-btn { color: var(--texto); }
-  #select-etapa { background: var(--fundo-alt); color: var(--texto); }
-  .alerta-info { background: #142c42; color: #bcdcfc; }
-  .alerta-aviso { background: #402f10; color: #ffdd9c; }
-  .alerta-erro { background: #3a1414; color: #ffb4b4; }
-  .gauge-legenda { color: #aaa; }
+}
+
+:root[data-tema="escuro"] {
+  --texto: #e8e8e8;
+  --texto-suave: #aab2c0;
+  --fundo: #14181f;
+  --fundo-alt: #1c2430;
+  --fundo-controle: #1c2430;
+  --borda: #2c3648;
+  --fundo-chip: #1c2c44;
+  --borda-chip: #2f4d78;
+  --alerta-info-fundo: #142c42;
+  --alerta-info-texto: #bcdcfc;
+  --alerta-aviso-fundo: #402f10;
+  --alerta-aviso-texto: #ffdd9c;
+  --alerta-erro-fundo: #3a1414;
+  --alerta-erro-texto: #ffb4b4;
+  --alerta-ok-fundo: #12331e;
+  --alerta-ok-texto: #a4dcb5;
 }
