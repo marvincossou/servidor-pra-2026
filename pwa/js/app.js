@@ -43,10 +43,6 @@
     conteudoNotaIndicador: document.getElementById("conteudo-nota-indicador"),
     conteudoFormulaFinal: document.getElementById("conteudo-formula-final"),
     conteudoElegibilidade: document.getElementById("conteudo-elegibilidade"),
-    conteudoAusenciasIntro: document.getElementById("conteudo-ausencias-intro"),
-    buscaAusencia: document.getElementById("busca-ausencia"),
-    tabelaAusenciasCorpo: document.getElementById("tabela-ausencias-corpo"),
-    ausenciasSemResultado: document.getElementById("ausencias-sem-resultado"),
     faqLista: document.getElementById("faq-lista"),
     rodapeFonte: document.getElementById("rodape-fonte"),
     rodapeDadosDe: document.getElementById("rodape-dados-de"),
@@ -59,7 +55,6 @@
   let unidadeAtual = null; // linha (objeto) da unidade selecionada
   let perfilAtual = null;
   let debounceId = null;
-  let debounceAusenciasId = null;
   let titulosDocumentos = []; // títulos dos documentos de dados.busca, usados para destacar citações
 
   const REGEX_NAO_ASCII = new RegExp("[^\\x00-\\x7F]", "g");
@@ -352,8 +347,6 @@
     els.conteudoNotaIndicador.innerHTML = dados.estaticos.nota_indicador_html;
     els.conteudoFormulaFinal.innerHTML = dados.estaticos.formula_final_html;
     els.conteudoElegibilidade.innerHTML = dados.estaticos.elegibilidade_html;
-    els.conteudoAusenciasIntro.innerHTML = dados.estaticos.ausencias_intro_html;
-    renderTabelaAusencias("");
 
     els.faqLista.innerHTML = "";
     for (const item of faq) {
@@ -366,25 +359,6 @@
       details.appendChild(summary);
       details.appendChild(div);
       els.faqLista.appendChild(details);
-    }
-  }
-
-  function renderTabelaAusencias(termo) {
-    const termoNorm = normalizar(termo);
-    const linhas = dados.estaticos.ausencias.filter((a) => normalizar(a.descricao).includes(termoNorm));
-
-    els.tabelaAusenciasCorpo.innerHTML = "";
-    els.ausenciasSemResultado.hidden = linhas.length > 0;
-
-    for (const a of linhas) {
-      const tr = document.createElement("tr");
-      const descricao = a.observacoes ? `${a.descricao} (${a.observacoes})` : a.descricao;
-      tr.innerHTML = `
-        <td>${descricao}</td>
-        <td>${a.conta_como_ausencia ? "Sim" : "Não"}</td>
-        <td>${a.falta_nao_justificada ? "Sim" : "Não"}</td>
-      `;
-      els.tabelaAusenciasCorpo.appendChild(tr);
     }
   }
 
@@ -466,11 +440,6 @@
     });
 
     els.botaoPerguntarIA.addEventListener("click", perguntarIA);
-
-    els.buscaAusencia.addEventListener("input", () => {
-      clearTimeout(debounceAusenciasId);
-      debounceAusenciasId = setTimeout(() => renderTabelaAusencias(els.buscaAusencia.value), 150);
-    });
 
     tratarBusca();
     tratarBuscaAssunto();

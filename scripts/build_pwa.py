@@ -27,7 +27,6 @@ import pandas as pd
 RAIZ = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RAIZ))
 
-from src.ausencias import INTRO_AUSENCIAS, carregar_ausencias  # noqa: E402
 from src.busca_legislacao import documentos_busca  # noqa: E402
 from src.dados import ETAPAS_BITS, MODALIDADES_PD, carregar_unidades  # noqa: E402
 from src.faq import faq_visivel  # noqa: E402
@@ -188,8 +187,6 @@ def _gerar_estaticos_json() -> dict:
         ],
         "etapa_labels": ETAPA_LABELS,
         "etapa_icons": ETAPA_ICONS,
-        "ausencias_intro_html": _md_para_html(INTRO_AUSENCIAS),
-        "ausencias": carregar_ausencias(),
         "textos_ui": {
             "titulo_pagina": TITULO_PAGINA,
             "intro_html": _md_para_html(INTRO),

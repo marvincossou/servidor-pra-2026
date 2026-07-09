@@ -24,15 +24,13 @@
 ├── src/
 │   ├── dados.py                → carregar_unidades/buscar_unidades (decodifica bits de base/dp_sme.xlsx)
 │   ├── regras_pra_2026.py      → motor de regras explicativas da PRA 2026 (não calcula valores)
-│   ├── ausencias.py            → tabela operacional de tipos de afastamento (base/Ausencias.xlsx)
 │   ├── faq.py                  → perguntas frequentes (com status documentado/operacional/pendente_ctrh)
 │   └── textos_ui.py            → textos fixos de interface, fonte única para o build
 ├── pwa/                        → app shell (index.html, css/, js/app.js, sw.js, manifest, icons/, assets/)
 │   └── legislacao/
 │       └── resolucao-sme-561-2026-pra.pdf
 ├── base/                       → dados de entrada
-│   ├── dp_sme.xlsx             → cadastro de unidades (CRE, denominação, etapas/modalidades) — não é específico de um ano de PRA
-│   └── Ausencias.xlsx          → tabela operacional de afastamentos (sem dados pessoais)
+│   └── dp_sme.xlsx             → cadastro de unidades (CRE, denominação, etapas/modalidades) — não é específico de um ano de PRA
 ├── docs/
 │   ├── REGRAS_PRA_2026.md      → referência resumida das regras da PRA 2026
 │   └── SESSION_HANDOFF.md

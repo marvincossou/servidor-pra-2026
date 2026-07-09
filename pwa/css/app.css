@@ -376,51 +376,6 @@ summary {
 
 #faq-lista details { margin: 8px 0; }
 
-#busca-ausencia {
-  display: block;
-  width: 100%;
-  font-size: 1rem;
-  padding: 12px 14px;
-  border-radius: 10px;
-  border: 1px solid var(--borda);
-  min-height: 44px;
-  margin: 6px 0 14px;
-}
-
-.tabela-scroll {
-  overflow-x: auto;
-  border: 1px solid var(--borda);
-  border-radius: 10px;
-}
-
-#tabela-ausencias {
-  width: 100%;
-  min-width: 480px;
-  border-collapse: collapse;
-  font-size: 0.9rem;
-}
-
-#tabela-ausencias th, #tabela-ausencias td {
-  padding: 8px 10px;
-  text-align: left;
-  vertical-align: top;
-  border-bottom: 1px solid var(--borda);
-  white-space: nowrap;
-}
-
-#tabela-ausencias th:first-child, #tabela-ausencias td:first-child {
-  white-space: normal;
-  min-width: 220px;
-}
-
-#tabela-ausencias thead th {
-  background: var(--fundo-alt);
-  position: sticky;
-  top: 0;
-}
-
-#tabela-ausencias tbody tr:last-child td { border-bottom: none; }
-
 footer { margin-top: 32px; padding-bottom: 32px; }
 
 .rodape-texto {

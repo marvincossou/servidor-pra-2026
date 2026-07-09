@@ -13,7 +13,6 @@ import subprocess
 import pytest
 
 from scripts.build_pwa import _md_para_html, gerar_build
-from src.ausencias import carregar_ausencias
 from src.dados import _normalizar, carregar_unidades
 from src.faq import faq_visivel
 from src.regras_pra_2026 import (
@@ -209,12 +208,3 @@ def test_normalizacao_js_bate_com_python(df):
     normalizados_js = json.loads(resultado.stdout)
     normalizados_py = [_normalizar(a) for a in amostras]
     assert normalizados_js == normalizados_py
-
-
-def test_ausencias_no_build_bate_com_o_motor(build):
-    esperado = carregar_ausencias("base/Ausencias.xlsx")
-    assert build["estaticos"]["ausencias"] == esperado
-
-
-def test_ausencias_intro_presente_no_build(build):
-    assert "Art. 8" in build["estaticos"]["ausencias_intro_html"]
