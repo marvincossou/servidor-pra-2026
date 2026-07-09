@@ -336,6 +336,11 @@ summary {
   gap: 8px;
 }
 
+/* O display:flex acima anula o display:none padrão do atributo hidden —
+   sem esta regra, a pergunta condicional do questionário (avaliação de
+   gestores, só para quem foi Diretor IV) apareceria sempre. */
+.cartoes-radio[hidden] { display: none; }
+
 .cartoes-radio legend {
   font-weight: 600;
   margin-bottom: 8px;
