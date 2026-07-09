@@ -741,7 +741,7 @@ def explicar_formula_final() -> str:
     return (
         "#### Como o valor final é calculado (Art. 16)\n\n"
         "PRA = (Nota de premiação da modalidade/etapa) × (Fração da carga "
-        "horária na etapa) × (Critérios de remuneração)\n\n"
+        "horária na etapa) × (13º salário bruto de 2026)\n\n"
         "ℹ️ Se você atuou em **mais de uma modalidade/etapa** ao mesmo tempo, "
         "a fração de carga horária de cada uma leva em conta a proporção da "
         "sua distribuição de carga horária entre elas.\n\n"

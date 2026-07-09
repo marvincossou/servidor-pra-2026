@@ -85,7 +85,7 @@ Competências para Gestores (Portaria E/CTRH nº 21/2026).
 ## Cálculo final (Art. 16)
 
 PRA = (Nota de premiação da modalidade/etapa) × (Fração da carga horária) ×
-(Critérios de remuneração do Art. 2º)
+(13º salário bruto de 2026 — critérios de remuneração do Art. 2º)
 
 Bônus possíveis (não cumulativos):
 - +0,10/+0,20 para quem responde pelo Fator Geral de unidades mistas (ver acima);
