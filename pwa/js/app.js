@@ -56,6 +56,8 @@
   let unidadeAtual = null; // linha (objeto) da unidade selecionada
   let perfilAtual = null;
   let debounceId = null;
+  let resultadosVisiveis = []; // resultados exibidos na lista suspensa da busca
+  let indiceAtivo = -1; // opção destacada via teclado (aria-activedescendant)
   let titulosDocumentos = []; // títulos dos documentos de dados.busca, usados para destacar citações
 
   const REGEX_NAO_ASCII = new RegExp("[^\\x00-\\x7F]", "g");
@@ -121,22 +123,75 @@
     return encontrados;
   }
 
+  function fecharListaResultados() {
+    els.resultadosLista.hidden = true;
+    els.buscaInput.setAttribute("aria-expanded", "false");
+    els.buscaInput.removeAttribute("aria-activedescendant");
+    resultadosVisiveis = [];
+    indiceAtivo = -1;
+  }
+
+  function marcarOpcaoAtiva(indice) {
+    const opcoes = els.resultadosLista.querySelectorAll('[role="option"]');
+    opcoes.forEach((opcao, i) => {
+      const ativa = i === indice;
+      opcao.setAttribute("aria-selected", String(ativa));
+      opcao.classList.toggle("opcao-ativa", ativa);
+    });
+    indiceAtivo = indice;
+    if (indice >= 0) {
+      const opcao = opcoes[indice];
+      els.buscaInput.setAttribute("aria-activedescendant", opcao.id);
+      opcao.scrollIntoView({ block: "nearest" });
+    } else {
+      els.buscaInput.removeAttribute("aria-activedescendant");
+    }
+  }
+
   function renderResultados(lista) {
     els.resultadosLista.innerHTML = "";
     if (lista.length <= 1) {
-      els.resultadosLista.hidden = true;
+      fecharListaResultados();
       return;
     }
     els.resultadosLista.hidden = false;
-    for (const unidade of lista) {
+    els.buscaInput.setAttribute("aria-expanded", "true");
+    els.buscaInput.removeAttribute("aria-activedescendant");
+    resultadosVisiveis = lista;
+    indiceAtivo = -1;
+    lista.forEach((unidade, i) => {
       const li = document.createElement("li");
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "resultado-btn";
-      btn.textContent = `${unidade.designacao} — ${unidade.denominacao} (${unidade.cre_formatada})`;
-      btn.addEventListener("click", () => selecionarUnidade(unidade));
-      li.appendChild(btn);
+      li.className = "resultado-btn";
+      li.setAttribute("role", "option");
+      li.id = `opcao-resultado-${i}`;
+      li.setAttribute("aria-selected", "false");
+      li.textContent = `${unidade.designacao} — ${unidade.denominacao} (${unidade.cre_formatada})`;
+      // mousedown com preventDefault mantém o foco no input (padrão combobox).
+      li.addEventListener("mousedown", (ev) => ev.preventDefault());
+      li.addEventListener("click", () => selecionarUnidade(unidade));
       els.resultadosLista.appendChild(li);
+    });
+  }
+
+  function tratarTeclasBusca(ev) {
+    const aberta = !els.resultadosLista.hidden && resultadosVisiveis.length > 0;
+
+    if (ev.key === "ArrowDown" || ev.key === "ArrowUp") {
+      if (!aberta) return;
+      ev.preventDefault();
+      const delta = ev.key === "ArrowDown" ? 1 : -1;
+      const proximo = Math.min(Math.max(indiceAtivo + delta, 0), resultadosVisiveis.length - 1);
+      marcarOpcaoAtiva(proximo);
+    } else if (ev.key === "Enter") {
+      if (aberta && indiceAtivo >= 0) {
+        ev.preventDefault();
+        selecionarUnidade(resultadosVisiveis[indiceAtivo]);
+      }
+    } else if (ev.key === "Escape") {
+      if (aberta) {
+        ev.preventDefault();
+        fecharListaResultados();
+      }
     }
   }
 
@@ -229,6 +284,7 @@
     renderPainelCaso();
 
     els.fichaUnidade.hidden = false;
+    els.fichaTitulo.focus({ preventScroll: true });
     els.fichaUnidade.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
@@ -293,7 +349,7 @@
 
   function selecionarUnidade(unidade) {
     unidadeAtual = unidade;
-    els.resultadosLista.hidden = true;
+    fecharListaResultados();
     renderFicha(unidade);
   }
 
@@ -304,7 +360,7 @@
     if (!termo) {
       els.buscaDicaVazia.hidden = false;
       els.buscaSemResultado.hidden = true;
-      els.resultadosLista.hidden = true;
+      fecharListaResultados();
       return;
     }
     els.buscaDicaVazia.hidden = true;
@@ -312,7 +368,7 @@
     const resultados = buscarUnidades(termo);
     if (resultados.length === 0) {
       els.buscaSemResultado.hidden = false;
-      els.resultadosLista.hidden = true;
+      fecharListaResultados();
       return;
     }
     els.buscaSemResultado.hidden = true;
@@ -470,6 +526,7 @@
       clearTimeout(debounceId);
       debounceId = setTimeout(tratarBusca, 150);
     });
+    els.buscaInput.addEventListener("keydown", tratarTeclasBusca);
 
     els.buscaAssuntoInput.addEventListener("input", tratarBuscaAssunto);
     els.buscaAssuntoInput.addEventListener("keydown", (ev) => {

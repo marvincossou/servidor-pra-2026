@@ -71,7 +71,8 @@
     <p class="secao-busca-etiqueta">🏫 Encontre sua escola</p>
     <div class="busca-container">
       <label id="busca-label" for="busca-input"></label>
-      <input type="search" id="busca-input" inputmode="search" autocomplete="off" enterkeyhint="search">
+      <input type="search" id="busca-input" inputmode="search" autocomplete="off" enterkeyhint="search"
+             role="combobox" aria-expanded="false" aria-controls="resultados-lista" aria-autocomplete="list">
     </div>
 
     <p id="busca-dica-vazia" class="alerta alerta-info"></p>
@@ -80,9 +81,9 @@
 
   <ul id="resultados-lista" role="listbox" aria-label="Unidades encontradas" hidden></ul>
 
-  <section id="ficha-unidade" hidden aria-live="polite">
+  <section id="ficha-unidade" hidden>
     <hr>
-    <h2 id="ficha-titulo"></h2>
+    <h2 id="ficha-titulo" tabindex="-1"></h2>
 
     <div class="cartao">
       <p class="cartao-titulo">📍 Dados da unidade</p>

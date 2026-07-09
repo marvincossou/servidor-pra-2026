@@ -178,8 +178,12 @@ summary {
   cursor: pointer;
 }
 
-.resultado-btn:hover, .resultado-btn:focus {
+.resultado-btn:hover, .resultado-btn:focus, .resultado-btn.opcao-ativa {
   background: var(--fundo-alt);
+}
+
+.resultado-btn.opcao-ativa {
+  box-shadow: inset 3px 0 0 var(--azul);
 }
 
 .busca-linha {
