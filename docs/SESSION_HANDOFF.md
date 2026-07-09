@@ -8,12 +8,14 @@ buscou a escola dele — resposta personalizada pelo cargo/perfil da unidade.
 
 **Netlify sem créditos até ~22/07/2026** (ver memória `netlify_creditos_esgotados`) —
 commits recentes (remoção das sugestões de CTRH) estão no GitHub mas ainda
-não publicados lá. Como alternativa, foi adicionado suporte a
-**auto-hospedagem no servidor de casa do usuário via Tailscale Funnel** (ver
-`docs/SELF_HOSTING.md`) — ainda não implantado de fato (falta o usuário
-rodar os comandos no próprio servidor).
+não publicados lá.
 
-## Auto-hospedagem alternativa (Tailscale Funnel) — 2026-07-09
+**Auto-hospedagem no servidor de casa JÁ NO AR**, publicamente, via Tailscale
+Funnel: **https://servidor.tail3e4254.ts.net** — testado ao vivo (busca por
+escola + busca por IA) com Playwright headless, funcionando 100%. Netlify
+continua existindo em paralelo (sem créditos até ~22/07).
+
+## Auto-hospedagem alternativa (Tailscale Funnel) — 2026-07-09 — NO AR
 
 - `lib/perguntar-core.js` (novo): lógica de IA (prompt, validação de
   contexto, guard-rail monetário, chamada à Groq) extraída para um módulo
@@ -21,18 +23,26 @@ rodar os comandos no próprio servidor).
   autônomo.
 - `netlify/functions/perguntar.js`: virou um adaptador fino sobre
   `lib/perguntar-core.js` (mesmo comportamento de antes, só refatorado).
-- `server/server.js` (novo): servidor Node puro (sem dependências),
-  pensado para rodar no servidor Linux de casa do usuário atrás do
-  **Tailscale Funnel** (ele já usa Tailscale para acessar Nextcloud do
-  iPhone — IP `100.93.68.121`, confirmado como faixa do Tailscale, não CGNAT
-  do provedor). Serve os arquivos de `dist/` e a rota `POST /api/perguntar`.
-  Testado localmente (build + servidor rodando nesta máquina): arquivos
-  estáticos, guard-rail de path traversal, e o pipeline completo da IA
-  (com chave falsa, confirmando que chega até a Groq e trata erro
-  corretamente) — tudo funcionando.
-- `server/pra-2026-pwa.service` (novo): template de serviço systemd.
-- `docs/SELF_HOSTING.md` (novo): passo a passo completo (build local → copiar
-  para o servidor → variável de ambiente → systemd → Tailscale Funnel).
+- `server/server.js` (novo): servidor Node puro (sem dependências), rodando
+  de fato no servidor Linux de casa do usuário (`servidor`, Debian 13,
+  `100.93.68.121` na tailnet) atrás do **Tailscale Funnel**.
+- Implantado como **serviço systemd de usuário** (`~/.config/systemd/user/pra-2026-pwa.service`,
+  não o template de sistema em `server/pra-2026-pwa.service` — esse ficou só
+  como referência/alternativa). Rodando como usuário `marcus`, com
+  `loginctl enable-linger marcus` habilitado para sobreviver sem sessão
+  ativa. Chave da Groq em `~/pra-2026-pwa.env` (fora do repo, no servidor).
+- Tailscale Funnel habilitado na porta 8787 (`tailscale funnel --bg 8787`,
+  após `sudo tailscale set --operator=marcus` para não precisar mais de sudo
+  nos comandos do tailscale).
+- **Esta sessão tem acesso SSH direto ao servidor** (chave dedicada em
+  `~/.ssh/pra2026_ed25519` nesta máquina, usuário `marcus`) — decisão
+  explícita do usuário após ele avaliar o trade-off de confiança. Deploys
+  futuros: build local (`python scripts/build_pwa.py --saida dist_deploy`) +
+  `scp -r -i ~/.ssh/pra2026_ed25519 dist_deploy/* marcus@100.93.68.121:~/pra-2026-pwa/dist/`
+  + `ssh -i ~/.ssh/pra2026_ed25519 marcus@100.93.68.121 "systemctl --user restart pra-2026-pwa"`.
+- `docs/SELF_HOSTING.md` (documentação original, um pouco diferente do que
+  foi feito de fato — usa serviço de sistema com sudo em vez de serviço de
+  usuário; manter como referência mas o real é o descrito acima).
 - `pwa/js/app.js`: endpoint da IA trocado de `/.netlify/functions/perguntar`
   para `/api/perguntar` (caminho neutro, funciona nos dois hosts).
 - `netlify.toml`: redirect `/api/perguntar` → `/.netlify/functions/perguntar`,
