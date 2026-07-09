@@ -147,7 +147,6 @@
   function tratarBuscaAssunto() {
     const termo = els.buscaAssuntoInput.value;
 
-    els.botaoPerguntarIA.hidden = !termo;
     els.iaStatus.hidden = true;
     els.respostaIA.hidden = true;
     els.buscaAssuntoDicaVazia.hidden = Boolean(termo);
@@ -454,7 +453,7 @@
 
     els.buscaAssuntoInput.addEventListener("input", tratarBuscaAssunto);
     els.buscaAssuntoInput.addEventListener("keydown", (ev) => {
-      if (ev.key === "Enter" && !els.botaoPerguntarIA.hidden) perguntarIA();
+      if (ev.key === "Enter") perguntarIA();
     });
 
     els.botaoPerguntarIA.addEventListener("click", perguntarIA);
