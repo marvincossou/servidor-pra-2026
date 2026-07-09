@@ -585,8 +585,7 @@ CRITERIOS_ELEGIBILIDADE = [
 DISCLAIMER_ELEGIBILIDADE = (
     "⚠️ Este resultado é apenas **orientativo**, gerado a partir das suas "
     "respostas — quem verifica os registros funcionais e decide a "
-    "elegibilidade é a SME, conforme a Resolução. Em caso de dúvida, procure "
-    "a **CTRH da sua CRE**."
+    "elegibilidade é a SME, conforme a Resolução."
 )
 
 

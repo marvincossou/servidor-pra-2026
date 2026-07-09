@@ -220,7 +220,7 @@ def test_conclusao_sempre_contem_disclaimer():
     ):
         _, markdown = conclusao_elegibilidade_markdown(respostas)
         assert "orientativo" in markdown
-        assert "CTRH" in markdown
+        assert "SME" in markdown
 
 
 def test_conclusao_inelegivel_menciona_tambem_pontos_ctrh():
@@ -260,7 +260,7 @@ def test_questionario_elegibilidade_espelha_criterios():
     for pergunta in questionario["perguntas"]:
         assert "resposta_ok" not in pergunta
         assert "consequencia_falha" not in pergunta
-    assert "CTRH" in questionario["disclaimer"]
+    assert "SME" in questionario["disclaimer"]
 
 
 def test_explicar_formula_final_contem_formula():
