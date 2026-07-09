@@ -34,6 +34,8 @@ from src.regras_pra_2026 import (  # noqa: E402
     ETAPA_ICONS,
     ETAPA_LABELS,
     cargos_disponiveis,
+    combinacoes_respostas_elegibilidade,
+    conclusao_elegibilidade_markdown,
     explicar_elegibilidade,
     explicar_fator_geral,
     explicar_formula_final,
@@ -43,6 +45,7 @@ from src.regras_pra_2026 import (  # noqa: E402
     formatar_tipo_unidade,
     glossario_markdown,
     pendencias_verificacao_markdown,
+    questionario_elegibilidade,
 )
 from src.textos_ui import (
     AVISO_ESCOPO,
@@ -174,8 +177,55 @@ def _gerar_unidades_json(df: pd.DataFrame, indice_por_chave: dict[tuple, int]) -
     }
 
 
+CLASSE_ALERTA_CONCLUSAO = {
+    "atende": "alerta-ok",
+    "ctrh": "alerta-aviso",
+    "inelegivel": "alerta-erro",
+}
+
+
+def _gerar_questionario_elegibilidade_json() -> dict:
+    """Questionário interativo: perguntas + tabela chave->conclusão pré-computada.
+
+    Toda a avaliação acontece aqui (Python, testado em pytest); o JS apenas
+    monta a chave de respostas e consulta a tabela.
+    """
+    questionario = questionario_elegibilidade()
+
+    conclusoes: list[str] = []
+    indice_por_html: dict[str, int] = {}
+    tabela: dict[str, int] = {}
+    for chave, respostas in combinacoes_respostas_elegibilidade():
+        resultado, md = conclusao_elegibilidade_markdown(respostas)
+        html = (
+            f'<div class="alerta {CLASSE_ALERTA_CONCLUSAO[resultado]}">'
+            f"{_md_para_html(md)}</div>"
+        )
+        if html not in indice_por_html:
+            indice_por_html[html] = len(conclusoes)
+            conclusoes.append(html)
+        tabela[chave] = indice_por_html[html]
+
+    return {
+        "intro_html": _md_para_html(questionario["intro"]),
+        "perguntas": [
+            {
+                "id": p["id"],
+                "texto_html": _md_para_html(p["texto"]),
+                "nota": p["nota"],
+                "depende_de": p["depende_de"],
+            }
+            for p in questionario["perguntas"]
+        ],
+        "conclusoes": conclusoes,
+        "tabela": tabela,
+        "disclaimer_html": _md_para_html(questionario["disclaimer"]),
+    }
+
+
 def _gerar_estaticos_json() -> dict:
     return {
+        "questionario_elegibilidade": _gerar_questionario_elegibilidade_json(),
         "glossario_html": _md_para_html(glossario_markdown()),
         "elegibilidade_html": _md_para_html(explicar_elegibilidade()),
         "formula_final_html": _md_para_html(explicar_formula_final()),

@@ -17,12 +17,15 @@ from src.dados import _normalizar, carregar_unidades
 from src.faq import faq_visivel
 from src.regras_pra_2026 import (
     cargos_disponiveis,
+    combinacoes_respostas_elegibilidade,
+    conclusao_elegibilidade_markdown,
     explicar_elegibilidade,
     explicar_fator_geral,
     explicar_formula_final,
     explicar_nota_indicador,
     explicar_professor,
     pendencias_verificacao_markdown,
+    questionario_elegibilidade,
 )
 
 # Mesmas designações usadas em tests/test_regras_pra_2026.py (CASOS_CLASSIFICACAO).
@@ -208,3 +211,37 @@ def test_normalizacao_js_bate_com_python(df):
     normalizados_js = json.loads(resultado.stdout)
     normalizados_py = [_normalizar(a) for a in amostras]
     assert normalizados_js == normalizados_py
+
+
+def test_questionario_perguntas_batem_com_o_motor(build):
+    questionario_build = build["estaticos"]["questionario_elegibilidade"]
+    questionario_motor = questionario_elegibilidade()
+    assert [p["id"] for p in questionario_build["perguntas"]] == [
+        p["id"] for p in questionario_motor["perguntas"]
+    ]
+    for p_build, p_motor in zip(
+        questionario_build["perguntas"], questionario_motor["perguntas"]
+    ):
+        assert p_build["texto_html"] == _md_para_html(p_motor["texto"])
+        assert p_build["depende_de"] == p_motor["depende_de"]
+    assert questionario_build["disclaimer_html"] == _md_para_html(
+        questionario_motor["disclaimer"]
+    )
+
+
+def test_tabela_de_conclusoes_e_exaustiva_e_bate_com_o_motor(build):
+    questionario = build["estaticos"]["questionario_elegibilidade"]
+    tabela = questionario["tabela"]
+    conclusoes = questionario["conclusoes"]
+    combinacoes = combinacoes_respostas_elegibilidade()
+
+    assert set(tabela) == {chave for chave, _ in combinacoes}
+    assert set(tabela.values()) == set(range(len(conclusoes))), (
+        "índices de conclusão com buracos ou sobras"
+    )
+
+    for chave, respostas in combinacoes:
+        _, md = conclusao_elegibilidade_markdown(respostas)
+        assert _md_para_html(md) in conclusoes[tabela[chave]], (
+            f"conclusão divergente para a chave {chave}"
+        )
