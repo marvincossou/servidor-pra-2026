@@ -6,10 +6,16 @@
 
 const PADRAO_VALOR_MONETARIO = /R\$\s*\d/;
 const TAMANHO_MAXIMO_PERGUNTA = 300;
+const TAMANHO_MAXIMO_CONTEXTO_UNIDADE = 2000;
 
-function montarPromptSistema(documentos) {
+function montarPromptSistema(documentos, contextoUnidade) {
   const trechos = documentos.map((doc) => `### ${doc.titulo}\n${doc.texto}`).join("\n\n");
-  return `Você é um assistente que explica as regras da Premiação por Resultados de Aprendizagem (PRA) 2026 da SME-Rio (Resolução SME nº 561/2026), com base EXCLUSIVAMENTE nos trechos abaixo.
+
+  const blocoContexto = contextoUnidade
+    ? `\n\nContexto da escola e do cargo do servidor que está perguntando (use isso para personalizar a resposta; é o mesmo texto que o painel já mostra para o caso dele — não precisa citar isso como documento, mas pode citar os documentos gerais quando também se aplicarem):\n\nEscola: ${contextoUnidade.escola}\n\n${contextoUnidade.explicacao_do_caso}`
+    : "";
+
+  return `Você é um assistente que explica as regras da Premiação por Resultados de Aprendizagem (PRA) 2026 da SME-Rio (Resolução SME nº 561/2026), com base EXCLUSIVAMENTE nos trechos abaixo${contextoUnidade ? " e no contexto da escola/cargo do servidor, quando fornecido" : ""}.
 
 Regras obrigatórias:
 - Responda sempre em português, de forma direta e simples.
@@ -19,7 +25,18 @@ Regras obrigatórias:
 
 Trechos disponíveis:
 
-${trechos}`;
+${trechos}${blocoContexto}`;
+}
+
+function validarContextoUnidade(bruto) {
+  if (!bruto || typeof bruto !== "object") return null;
+  const { escola, explicacao_do_caso: explicacaoDoCaso } = bruto;
+  if (typeof escola !== "string" || typeof explicacaoDoCaso !== "string") return null;
+  if (!escola.trim() || !explicacaoDoCaso.trim()) return null;
+  return {
+    escola: escola.slice(0, TAMANHO_MAXIMO_CONTEXTO_UNIDADE),
+    explicacao_do_caso: explicacaoDoCaso.slice(0, TAMANHO_MAXIMO_CONTEXTO_UNIDADE),
+  };
 }
 
 exports.handler = async (event) => {
@@ -28,8 +45,9 @@ exports.handler = async (event) => {
   }
 
   let pergunta;
+  let contextoUnidadeBruto;
   try {
-    ({ pergunta } = JSON.parse(event.body || "{}"));
+    ({ pergunta, contexto_unidade: contextoUnidadeBruto } = JSON.parse(event.body || "{}"));
   } catch {
     return { statusCode: 400, body: JSON.stringify({ erro: "Corpo da requisição inválido." }) };
   }
@@ -37,6 +55,8 @@ exports.handler = async (event) => {
   if (typeof pergunta !== "string" || !pergunta.trim() || pergunta.length > TAMANHO_MAXIMO_PERGUNTA) {
     return { statusCode: 400, body: JSON.stringify({ erro: "Pergunta inválida." }) };
   }
+
+  const contextoUnidade = validarContextoUnidade(contextoUnidadeBruto);
 
   if (!process.env.GROQ_API_KEY) {
     return { statusCode: 503, body: JSON.stringify({ erro: "Recurso de IA não está configurado neste momento." }) };
@@ -64,7 +84,7 @@ exports.handler = async (event) => {
       body: JSON.stringify({
         model: process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
         messages: [
-          { role: "system", content: montarPromptSistema(documentos) },
+          { role: "system", content: montarPromptSistema(documentos, contextoUnidade) },
           { role: "user", content: pergunta },
         ],
         temperature: 0.2,

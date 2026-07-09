@@ -179,11 +179,20 @@
     els.iaStatus.classList.add("alerta-info");
     els.iaStatus.textContent = dados.estaticos.textos_ui.ia_carregando;
 
+    // Se o servidor já buscou a escola dele, manda o texto do caso específico
+    // (o mesmo já exibido na aba "Meu caso") para a IA personalizar a resposta.
+    const contextoUnidade = unidadeAtual
+      ? {
+          escola: `${unidadeAtual.designacao} — ${unidadeAtual.denominacao} (${unidadeAtual.cre_formatada})`,
+          explicacao_do_caso: els.conteudoCaso.textContent.trim(),
+        }
+      : null;
+
     try {
       const resposta = await fetch("/.netlify/functions/perguntar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pergunta }),
+        body: JSON.stringify({ pergunta, contexto_unidade: contextoUnidade }),
       });
       const corpo = await resposta.json();
       if (!resposta.ok || !corpo.resposta) throw new Error(corpo.erro || "Resposta inválida");
