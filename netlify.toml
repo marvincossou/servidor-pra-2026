@@ -5,6 +5,11 @@
 [functions]
   directory = "netlify/functions"
 
+[[redirects]]
+  from = "/api/perguntar"
+  to = "/.netlify/functions/perguntar"
+  status = 200
+
 [[headers]]
   for = "/sw.js"
   [headers.values]

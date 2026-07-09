@@ -189,7 +189,7 @@
       : null;
 
     try {
-      const resposta = await fetch("/.netlify/functions/perguntar", {
+      const resposta = await fetch("/api/perguntar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pergunta, contexto_unidade: contextoUnidade }),

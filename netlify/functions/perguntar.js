@@ -1,48 +1,20 @@
-// Netlify Function: responde perguntas em linguagem natural sobre a PRA 2026,
-// usando a API da Groq (tier gratuito) com base SOMENTE nos documentos de
-// `dist/dados/busca.json` (mesmo índice usado pela busca por palavra-chave em
-// pwa/js/app.js). Fonte única dos documentos continua sendo
-// `src/busca_legislacao.py` — esta function nunca inventa conteúdo próprio.
+// Netlify Function: adaptador fino sobre lib/perguntar-core.js (lógica de IA
+// compartilhada com server/server.js, usado no auto-hospedagem alternativa).
 
-const PADRAO_VALOR_MONETARIO = /R\$\s*\d/;
-const TAMANHO_MAXIMO_PERGUNTA = 300;
-const TAMANHO_MAXIMO_CONTEXTO_UNIDADE = 2000;
+const { responderPergunta } = require("../../lib/perguntar-core");
 
 // Cache em memória do processo: containers "quentes" do Netlify reaproveitam
 // esta variável entre chamadas, evitando refazer a busca de busca.json a
 // cada pergunta. Um novo deploy sempre cria um container novo (cache vazio).
 let documentosCache = null;
 
-function montarPromptSistema(documentos, contextoUnidade) {
-  const trechos = documentos.map((doc) => `### ${doc.titulo}\n${doc.texto}`).join("\n\n");
-
-  const blocoContexto = contextoUnidade
-    ? `\n\nContexto da escola e do cargo do servidor que está perguntando (use isso para personalizar a resposta; é o mesmo texto que o painel já mostra para o caso dele — não precisa citar isso como documento, mas pode citar os documentos gerais quando também se aplicarem):\n\nEscola: ${contextoUnidade.escola}\n\n${contextoUnidade.explicacao_do_caso}`
-    : "";
-
-  return `Você é um assistente que explica as regras da Premiação por Resultados de Aprendizagem (PRA) 2026 da SME-Rio (Resolução SME nº 561/2026), com base EXCLUSIVAMENTE nos trechos abaixo${contextoUnidade ? " e no contexto da escola/cargo do servidor, quando fornecido" : ""}.
-
-Regras obrigatórias:
-- Responda sempre em português, de forma direta e simples. Não comece com saudações genéricas ("Olá!", "Claro, posso ajudar!") — vá direto à resposta.
-- Toda informação que você der precisa citar o título do documento de origem, entre parênteses. Exemplo: "(Fonte: Tenho direito à PRA?)".
-- Se a resposta não estiver claramente nos trechos fornecidos, diga isso explicitamente. Nunca invente uma regra que não esteja nos trechos. Não sugira contato com a CTRH, com outros setores ou com canais externos — apenas informe que essa informação não está disponível neste painel.
-- Se o servidor comparar o caso dele com o de um colega (ex.: "fulano recebeu e eu não"), não tente adivinhar o motivo da diferença — apenas explique os critérios de elegibilidade que se aplicam.
-- Nunca informe valores em reais (R$) nem metas numéricas de indicadores por escola — esse painel não trabalha com esses dados.
-
-Trechos disponíveis:
-
-${trechos}${blocoContexto}`;
-}
-
-function validarContextoUnidade(bruto) {
-  if (!bruto || typeof bruto !== "object") return null;
-  const { escola, explicacao_do_caso: explicacaoDoCaso } = bruto;
-  if (typeof escola !== "string" || typeof explicacaoDoCaso !== "string") return null;
-  if (!escola.trim() || !explicacaoDoCaso.trim()) return null;
-  return {
-    escola: escola.slice(0, TAMANHO_MAXIMO_CONTEXTO_UNIDADE),
-    explicacao_do_caso: explicacaoDoCaso.slice(0, TAMANHO_MAXIMO_CONTEXTO_UNIDADE),
-  };
+async function obterDocumentos(origem) {
+  if (documentosCache) return documentosCache;
+  const respostaBusca = await fetch(`${origem}/dados/busca.json`);
+  if (!respostaBusca.ok) throw new Error("busca.json indisponível");
+  const { documentos } = await respostaBusca.json();
+  documentosCache = documentos;
+  return documentos;
 }
 
 exports.handler = async (event) => {
@@ -58,71 +30,17 @@ exports.handler = async (event) => {
     return { statusCode: 400, body: JSON.stringify({ erro: "Corpo da requisição inválido." }) };
   }
 
-  if (typeof pergunta !== "string" || !pergunta.trim() || pergunta.length > TAMANHO_MAXIMO_PERGUNTA) {
-    return { statusCode: 400, body: JSON.stringify({ erro: "Pergunta inválida." }) };
-  }
+  const origem = new URL(event.rawUrl || `https://${event.headers.host}`).origin;
 
-  const contextoUnidade = validarContextoUnidade(contextoUnidadeBruto);
-
-  if (!process.env.GROQ_API_KEY) {
-    return { statusCode: 503, body: JSON.stringify({ erro: "Recurso de IA não está configurado neste momento." }) };
-  }
-
-  let documentos;
-  if (documentosCache) {
-    documentos = documentosCache;
-  } else {
-    const origem = new URL(event.rawUrl || `https://${event.headers.host}`).origin;
-    try {
-      const respostaBusca = await fetch(`${origem}/dados/busca.json`);
-      if (!respostaBusca.ok) throw new Error("busca.json indisponível");
-      ({ documentos } = await respostaBusca.json());
-      documentosCache = documentos;
-    } catch {
-      return { statusCode: 502, body: JSON.stringify({ erro: "Não foi possível carregar a base de documentos." }) };
-    }
-  }
-
-  let respostaGroq;
-  try {
-    respostaGroq = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
-        messages: [
-          { role: "system", content: montarPromptSistema(documentos, contextoUnidade) },
-          { role: "user", content: pergunta },
-        ],
-        temperature: 0.2,
-        max_tokens: 500,
-      }),
-    });
-  } catch {
-    return { statusCode: 502, body: JSON.stringify({ erro: "Não foi possível falar com o serviço de IA agora." }) };
-  }
-
-  if (!respostaGroq.ok) {
-    return { statusCode: 502, body: JSON.stringify({ erro: "Não foi possível gerar uma resposta agora." }) };
-  }
-
-  const dados = await respostaGroq.json();
-  const resposta = dados.choices?.[0]?.message?.content?.trim();
-
-  if (!resposta) {
-    return { statusCode: 502, body: JSON.stringify({ erro: "O serviço de IA não devolveu uma resposta." }) };
-  }
-
-  if (PADRAO_VALOR_MONETARIO.test(resposta)) {
-    return { statusCode: 502, body: JSON.stringify({ erro: "Resposta bloqueada por guarda-corpo interno." }) };
-  }
+  const { statusCode, corpo } = await responderPergunta({
+    pergunta,
+    contextoUnidadeBruto,
+    obterDocumentos: () => obterDocumentos(origem),
+  });
 
   return {
-    statusCode: 200,
+    statusCode,
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ resposta }),
+    body: JSON.stringify(corpo),
   };
 };

@@ -1,0 +1,17 @@
+[Unit]
+Description=PRA 2026 PWA (auto-hospedado)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/caminho/para/pra-2026-pwa
+ExecStart=/usr/bin/node server/server.js
+Restart=always
+RestartSec=5
+EnvironmentFile=/etc/pra-2026-pwa.env
+# Troque pelo usuário sem privilégios que deve rodar o serviço.
+User=troque-pelo-seu-usuario
+
+[Install]
+WantedBy=multi-user.target

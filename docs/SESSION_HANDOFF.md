@@ -5,8 +5,41 @@
 MVP da PRA 2026 + busca por assunto respondida por IA (Groq), citando a
 legislação, com botão de lupa sempre visível e — quando o servidor já
 buscou a escola dele — resposta personalizada pelo cargo/perfil da unidade.
-Netlify conectado ao GitHub (deploy contínuo) e `GROQ_API_KEY` já
-configurada em produção — tudo testado ao vivo e funcionando.
+
+**Netlify sem créditos até ~22/07/2026** (ver memória `netlify_creditos_esgotados`) —
+commits recentes (remoção das sugestões de CTRH) estão no GitHub mas ainda
+não publicados lá. Como alternativa, foi adicionado suporte a
+**auto-hospedagem no servidor de casa do usuário via Tailscale Funnel** (ver
+`docs/SELF_HOSTING.md`) — ainda não implantado de fato (falta o usuário
+rodar os comandos no próprio servidor).
+
+## Auto-hospedagem alternativa (Tailscale Funnel) — 2026-07-09
+
+- `lib/perguntar-core.js` (novo): lógica de IA (prompt, validação de
+  contexto, guard-rail monetário, chamada à Groq) extraída para um módulo
+  compartilhado — fonte única usada tanto pelo Netlify quanto por um servidor
+  autônomo.
+- `netlify/functions/perguntar.js`: virou um adaptador fino sobre
+  `lib/perguntar-core.js` (mesmo comportamento de antes, só refatorado).
+- `server/server.js` (novo): servidor Node puro (sem dependências),
+  pensado para rodar no servidor Linux de casa do usuário atrás do
+  **Tailscale Funnel** (ele já usa Tailscale para acessar Nextcloud do
+  iPhone — IP `100.93.68.121`, confirmado como faixa do Tailscale, não CGNAT
+  do provedor). Serve os arquivos de `dist/` e a rota `POST /api/perguntar`.
+  Testado localmente (build + servidor rodando nesta máquina): arquivos
+  estáticos, guard-rail de path traversal, e o pipeline completo da IA
+  (com chave falsa, confirmando que chega até a Groq e trata erro
+  corretamente) — tudo funcionando.
+- `server/pra-2026-pwa.service` (novo): template de serviço systemd.
+- `docs/SELF_HOSTING.md` (novo): passo a passo completo (build local → copiar
+  para o servidor → variável de ambiente → systemd → Tailscale Funnel).
+- `pwa/js/app.js`: endpoint da IA trocado de `/.netlify/functions/perguntar`
+  para `/api/perguntar` (caminho neutro, funciona nos dois hosts).
+- `netlify.toml`: redirect `/api/perguntar` → `/.netlify/functions/perguntar`,
+  mantendo o Netlify funcional sem mudança nenhuma para quem usa esse host.
+- **Pendente**: o usuário ainda precisa rodar os passos do
+  `docs/SELF_HOSTING.md` no servidor dele (não tenho acesso SSH). Depois
+  disso, testar a URL pública `https://<dispositivo>.<tailnet>.ts.net`.
 
 ## Busca por IA personalizada pela escola/cargo — 2026-07-09
 
