@@ -41,7 +41,10 @@
 
   <div id="erro-carregamento" class="alerta alerta-erro" hidden></div>
 
-  <section class="secao-busca secao-busca--ia">
+  <!-- Busca por IA desativada temporariamente (qualidade das respostas
+       inconsistente) — código mantido intacto (lib/, netlify/functions/,
+       server/) para reativar bastando remover o atributo "hidden" abaixo. -->
+  <section class="secao-busca secao-busca--ia" hidden>
     <p class="secao-busca-etiqueta">✨ Esclareça sua dúvida sobre a legislação relativa ao PRA</p>
     <div class="busca-container">
       <label id="busca-assunto-label" for="busca-assunto-input"></label>
