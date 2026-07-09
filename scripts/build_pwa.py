@@ -28,6 +28,7 @@ RAIZ = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RAIZ))
 
 from src.ausencias import INTRO_AUSENCIAS, carregar_ausencias  # noqa: E402
+from src.busca_legislacao import documentos_busca  # noqa: E402
 from src.dados import ETAPAS_BITS, MODALIDADES_PD, carregar_unidades  # noqa: E402
 from src.faq import faq_visivel  # noqa: E402
 from src.regras_pra_2026 import (  # noqa: E402
@@ -47,6 +48,10 @@ from src.regras_pra_2026 import (  # noqa: E402
 from src.textos_ui import (
     AVISO_ESCOPO,
     AVISO_ESCOPO_TITULO,
+    BUSCA_ASSUNTO_DICA_VAZIA,
+    BUSCA_ASSUNTO_LABEL,
+    BUSCA_ASSUNTO_PLACEHOLDER,
+    BUSCA_ASSUNTO_SEM_RESULTADO,
     BUSCA_DICA_VAZIA,
     BUSCA_LABEL,
     BUSCA_PLACEHOLDER,
@@ -193,8 +198,28 @@ def _gerar_estaticos_json() -> dict:
             "busca_sem_resultado": BUSCA_SEM_RESULTADO,
             "sem_etapas_regencia_html": _md_para_html(SEM_ETAPAS_REGENCIA),
             "rodape_fonte": RODAPE_FONTE,
+            "busca_assunto_label": BUSCA_ASSUNTO_LABEL,
+            "busca_assunto_placeholder": BUSCA_ASSUNTO_PLACEHOLDER,
+            "busca_assunto_dica_vazia_html": _md_para_html(BUSCA_ASSUNTO_DICA_VAZIA),
+            "busca_assunto_sem_resultado": BUSCA_ASSUNTO_SEM_RESULTADO,
         },
     }
+
+
+def _gerar_busca_json() -> dict:
+    """Índice de documentos para a busca por assunto (TF-IDF calculado no
+    navegador, ver `pwa/js/app.js`). Fonte: `src/busca_legislacao.py`."""
+    documentos = [
+        {
+            "id": doc["id"],
+            "titulo": doc["titulo"],
+            "texto": doc["texto"],
+            "sinonimos": doc["sinonimos"],
+            "html": _md_para_html(doc["texto"]),
+        }
+        for doc in documentos_busca()
+    ]
+    return {"documentos": documentos}
 
 
 def _verificar_sem_valores_monetarios(*dados: dict) -> None:
@@ -229,13 +254,14 @@ def gerar_build(pasta_saida: Path) -> dict:
     indice_por_chave, perfis = _gerar_perfis(df)
     unidades_json = _gerar_unidades_json(df, indice_por_chave)
     estaticos_json = _gerar_estaticos_json()
+    busca_json = _gerar_busca_json()
 
     if len(unidades_json["unidades"]) != len(df):
         raise SystemExit("ERRO: nem toda unidade recebeu uma linha em unidades.json.")
     if any(linha[-1] >= len(perfis) for linha in unidades_json["unidades"]):
         raise SystemExit("ERRO: unidade referenciando perfil inexistente.")
 
-    _verificar_sem_valores_monetarios({"perfis": perfis}, unidades_json, estaticos_json)
+    _verificar_sem_valores_monetarios({"perfis": perfis}, unidades_json, estaticos_json, busca_json)
 
     dados_de = datetime.date.today().strftime("%d/%m/%Y")
     unidades_json["dados_de"] = dados_de
@@ -251,6 +277,9 @@ def gerar_build(pasta_saida: Path) -> dict:
     )
     (pasta_dados / "estaticos.json").write_text(
         json.dumps(estaticos_json, ensure_ascii=False, separators=(",", ":")), encoding="utf-8"
+    )
+    (pasta_dados / "busca.json").write_text(
+        json.dumps(busca_json, ensure_ascii=False, separators=(",", ":")), encoding="utf-8"
     )
 
     # Copia o app shell quando existir; o build de dados funciona mesmo
@@ -281,6 +310,7 @@ def gerar_build(pasta_saida: Path) -> dict:
         "tamanho_unidades_json": (pasta_dados / "unidades.json").stat().st_size,
         "tamanho_perfis_json": (pasta_dados / "perfis.json").stat().st_size,
         "tamanho_estaticos_json": (pasta_dados / "estaticos.json").stat().st_size,
+        "tamanho_busca_json": (pasta_dados / "busca.json").stat().st_size,
     }
 
 
@@ -311,6 +341,7 @@ def main() -> None:
     print(f"unidades.json: {resumo['tamanho_unidades_json'] / 1024:.1f} KB")
     print(f"perfis.json: {resumo['tamanho_perfis_json'] / 1024:.1f} KB")
     print(f"estaticos.json: {resumo['tamanho_estaticos_json'] / 1024:.1f} KB")
+    print(f"busca.json: {resumo['tamanho_busca_json'] / 1024:.1f} KB")
 
 
 if __name__ == "__main__":

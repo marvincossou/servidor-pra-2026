@@ -1,13 +1,38 @@
 # Session Handoff
 
-## Status (2026-07-08)
+## Status (2026-07-09)
 
-Projeto criado do zero, como irmão de `dashboard-servidor` (PRA 2025), sem
-alterar nada lá. MVP completo: explicador geral das regras da PRA 2026
-(Resolução SME nº 561/2026), sem números calculados nem metas reais por
-escola (fase 2, ver "Próximos passos").
+MVP da PRA 2026 (commit inicial já feito) + nova funcionalidade: busca por
+assunto na legislação, usando TF-IDF/sinônimos calculado no navegador (sem
+IA em tempo de execução, mantendo o app 100% estático/offline).
 
-## O que foi feito
+## O que foi feito nesta sessão (2026-07-09)
+
+- `src/busca_legislacao.py` (novo): monta o índice de documentos pesquisáveis
+  — glossário, indicadores I-IX, pendências de verificação, elegibilidade,
+  nota do indicador, fórmula final, FAQ visível — mais um documento
+  "ponteiro" (`cargo-especifico`) que direciona o servidor à busca por
+  escola quando o assunto (Fator Geral/professor por cargo) depende do
+  perfil da unidade. Sinônimos curados em `SINONIMOS`.
+- `scripts/build_pwa.py`: nova `_gerar_busca_json()` gera `dist/dados/busca.json`,
+  passa pelo mesmo guard-rail de valores monetários.
+- `pwa/index.html` + `pwa/js/app.js`: nova caixa de busca (`#busca-assunto-input`)
+  independente da busca por escola, com índice TF-IDF construído no carregamento
+  (`construirIndiceBusca`/`buscarAssunto`) e resultados em `<details>` (mesmo
+  padrão do FAQ).
+- `pwa/sw.js`: `busca.json` adicionado ao precache.
+- Testes novos: `tests/test_busca_legislacao.py` (cobertura do índice, sem
+  vazar FAQ `pendente_ctrh`, guard-rail monetário) + extensão de
+  `tests/test_build_pwa.py` para o novo `busca.json`. Total: 89 testes,
+  todos passando.
+- Verificado ponta-a-ponta com Playwright headless (script ad-hoc, não
+  commitado): busca por "IDERio", "tenho direito", "fator geral" (aciona o
+  documento ponteiro e foca a busca por escola) e termo sem resultado —
+  tudo funcionando, sem erros de console. **Não existe ainda um smoke test
+  de Playwright commitado no repo** — se quiser rodar de novo, seria preciso
+  escrever um novo script ou script de skill.
+
+## O que foi feito no MVP inicial
 
 - Estrutura completa do projeto (`src/`, `scripts/`, `pwa/`, `base/`, `docs/`, `tests/`).
 - `src/dados.py`: leitura de `base/dp_sme.xlsx` (cadastro de unidades), sem
@@ -42,14 +67,14 @@ escola (fase 2, ver "Próximos passos").
 
 ## Próximos passos
 
-1. `git init` + primeiro commit (aguardando autorização do usuário para
-   push/remote).
-2. Testar visualmente no navegador (Playwright smoke test não foi
-   escrito ainda — `tests/test_pwa_smoke.py` de 2025 pode servir de
-   referência).
-3. Deploy de teste no Netlify (site novo).
-4. Fase 2 (fora deste MVP): extrair as metas por indicador dos Anexos da
+1. Deploy de teste no Netlify (site novo) — ainda não confirmado que já
+   subiu com a busca por assunto.
+2. Escrever um smoke test de Playwright commitado (hoje só foi validado
+   manualmente, script descartado ao final da sessão).
+3. Fase 2 (fora deste MVP): extrair as metas por indicador dos Anexos da
    Resolução (PDF) e mostrar a meta real de cada unidade.
+4. Considerar expandir `SINONIMOS` em `src/busca_legislacao.py` conforme
+   servidores reais usarem a busca (termos que não estão sendo encontrados).
 
 ## Nota
 

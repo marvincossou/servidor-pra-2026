@@ -18,6 +18,7 @@ const ARQUIVOS_PRECACHE = [
   "./dados/unidades.json",
   "./dados/perfis.json",
   "./dados/estaticos.json",
+  "./dados/busca.json",
 ];
 
 self.addEventListener("install", (evento) => {

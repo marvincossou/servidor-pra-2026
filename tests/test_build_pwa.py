@@ -54,11 +54,14 @@ def build(tmp_path_factory):
     unidades_json = json.loads((pasta / "dados" / "unidades.json").read_text(encoding="utf-8"))
     perfis_json = json.loads((pasta / "dados" / "perfis.json").read_text(encoding="utf-8"))
     estaticos_json = json.loads((pasta / "dados" / "estaticos.json").read_text(encoding="utf-8"))
+    busca_json = json.loads((pasta / "dados" / "busca.json").read_text(encoding="utf-8"))
     return {
         "resumo": resumo,
         "unidades": unidades_json,
         "perfis": perfis_json["perfis"],
-    } | {"estaticos": estaticos_json}
+        "estaticos": estaticos_json,
+        "busca": busca_json,
+    }
 
 
 def _unidade(df, designacao):
@@ -137,9 +140,17 @@ def test_faq_do_build_nao_contem_pendente_ctrh(build):
 def test_nenhum_json_contem_valor_monetario(build):
     import re
 
-    for bloco in (build["unidades"], {"perfis": build["perfis"]}, build["estaticos"]):
+    for bloco in (build["unidades"], {"perfis": build["perfis"]}, build["estaticos"], build["busca"]):
         texto = json.dumps(bloco, ensure_ascii=False)
         assert not re.search(r"R\$\s*\d", texto)
+
+
+def test_busca_json_tem_documentos(build):
+    assert len(build["busca"]["documentos"]) > 0
+    for doc in build["busca"]["documentos"]:
+        assert doc["id"]
+        assert doc["titulo"]
+        assert doc["html"]
 
 
 def test_toda_unidade_referencia_perfil_valido(build):

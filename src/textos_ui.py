@@ -47,6 +47,19 @@ BUSCA_SEM_RESULTADO = (
     "digitar só uma palavra do nome, ou o código sem pontos."
 )
 
+BUSCA_ASSUNTO_LABEL = "🔎 Buscar um assunto sobre a PRA (ex.: IDERio, tenho direito, falta, fator geral)"
+BUSCA_ASSUNTO_PLACEHOLDER = "Ex.: tenho direito, o que é IDERio, falta conta contra mim..."
+
+BUSCA_ASSUNTO_DICA_VAZIA = (
+    "Digite uma palavra ou pergunta sobre a PRA (ex.: **tenho direito**, "
+    "**IDERio**, **CRE**, **falta**, **fator geral**)."
+)
+
+BUSCA_ASSUNTO_SEM_RESULTADO = (
+    "Nenhum assunto encontrado para esse termo. Tente uma palavra mais "
+    "simples, ou consulte a seção Legislação ao final da página."
+)
+
 SEM_ETAPAS_REGENCIA = (
     "Não há etapas/modalidades de regência identificadas para esta "
     "unidade. Selecione 'Estou fora de sala de aula' ou consulte a CTRH "

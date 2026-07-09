@@ -14,6 +14,11 @@
     buscaDicaVazia: document.getElementById("busca-dica-vazia"),
     buscaSemResultado: document.getElementById("busca-sem-resultado"),
     resultadosLista: document.getElementById("resultados-lista"),
+    buscaAssuntoLabel: document.getElementById("busca-assunto-label"),
+    buscaAssuntoInput: document.getElementById("busca-assunto-input"),
+    buscaAssuntoDicaVazia: document.getElementById("busca-assunto-dica-vazia"),
+    buscaAssuntoSemResultado: document.getElementById("busca-assunto-sem-resultado"),
+    buscaAssuntoResultados: document.getElementById("busca-assunto-resultados"),
     fichaUnidade: document.getElementById("ficha-unidade"),
     fichaTitulo: document.getElementById("ficha-titulo"),
     metricCre: document.getElementById("metric-cre"),
@@ -48,11 +53,13 @@
     toastBtn: document.getElementById("toast-atualizar-btn"),
   };
 
-  let dados = null; // { unidades, perfis, estaticos }
+  let dados = null; // { unidades, perfis, estaticos, busca }
   let unidadeAtual = null; // linha (objeto) da unidade selecionada
   let perfilAtual = null;
   let debounceId = null;
   let debounceAusenciasId = null;
+  let debounceAssuntoId = null;
+  let indiceBusca = null; // { documentos, idf } construído a partir de dados.busca
 
   const REGEX_NAO_ASCII = new RegExp("[^\\x00-\\x7F]", "g");
 
@@ -68,12 +75,13 @@
   }
 
   async function carregarDados() {
-    const [unidades, perfis, estaticos] = await Promise.all([
+    const [unidades, perfis, estaticos, busca] = await Promise.all([
       fetch("./dados/unidades.json").then((r) => r.json()),
       fetch("./dados/perfis.json").then((r) => r.json()),
       fetch("./dados/estaticos.json").then((r) => r.json()),
+      fetch("./dados/busca.json").then((r) => r.json()),
     ]);
-    return { unidades, perfis: perfis.perfis, estaticos };
+    return { unidades, perfis: perfis.perfis, estaticos, busca };
   }
 
   function linhaParaObjeto(colunas, linha) {
@@ -133,6 +141,112 @@
       li.appendChild(btn);
       els.resultadosLista.appendChild(li);
     }
+  }
+
+  function tokenizar(texto) {
+    return normalizar(texto).split(/[^a-z0-9]+/).filter(Boolean);
+  }
+
+  // Índice de busca por assunto: TF-IDF simples sobre um corpus pequeno,
+  // calculado inteiramente no navegador (nenhuma chamada de IA em tempo de
+  // execução). Título e sinônimos pesam mais que o corpo do texto.
+  function construirIndiceBusca(documentos) {
+    const docsProcessados = documentos.map((doc) => {
+      const freq = new Map();
+      for (const token of tokenizar(doc.titulo)) {
+        freq.set(token, (freq.get(token) || 0) + 3);
+      }
+      const corpo = [doc.texto, ...(doc.sinonimos || [])].join(" ");
+      for (const token of tokenizar(corpo)) {
+        freq.set(token, (freq.get(token) || 0) + 1);
+      }
+      return { doc, freq };
+    });
+
+    const docFreq = new Map();
+    for (const { freq } of docsProcessados) {
+      for (const token of freq.keys()) {
+        docFreq.set(token, (docFreq.get(token) || 0) + 1);
+      }
+    }
+
+    const total = docsProcessados.length;
+    const idf = new Map();
+    for (const [token, df] of docFreq) {
+      idf.set(token, Math.log((total + 1) / (df + 0.5)));
+    }
+
+    return { docsProcessados, idf };
+  }
+
+  function buscarAssunto(termo) {
+    const tokensConsulta = tokenizar(termo);
+    if (tokensConsulta.length === 0) return [];
+
+    const pontuacoes = [];
+    for (const { doc, freq } of indiceBusca.docsProcessados) {
+      let pontuacao = 0;
+      for (const token of tokensConsulta) {
+        const tf = freq.get(token) || 0;
+        if (tf === 0) continue;
+        pontuacao += tf * (indiceBusca.idf.get(token) || 0);
+      }
+      if (pontuacao > 0) pontuacoes.push({ doc, pontuacao });
+    }
+
+    pontuacoes.sort((a, b) => b.pontuacao - a.pontuacao);
+    return pontuacoes.slice(0, 8).map((p) => p.doc);
+  }
+
+  function renderResultadosAssunto(lista) {
+    els.buscaAssuntoResultados.innerHTML = "";
+    if (lista.length === 0) {
+      els.buscaAssuntoResultados.hidden = true;
+      return;
+    }
+    els.buscaAssuntoResultados.hidden = false;
+
+    for (const doc of lista) {
+      const details = document.createElement("details");
+      const summary = document.createElement("summary");
+      summary.textContent = doc.titulo;
+      const div = document.createElement("div");
+      div.className = "conteudo-md";
+      div.innerHTML = doc.html;
+      details.appendChild(summary);
+      details.appendChild(div);
+
+      if (doc.id === "cargo-especifico") {
+        details.addEventListener("toggle", () => {
+          if (!details.open) return;
+          els.buscaInput.scrollIntoView({ behavior: "smooth", block: "center" });
+          els.buscaInput.focus();
+        });
+      }
+
+      els.buscaAssuntoResultados.appendChild(details);
+    }
+  }
+
+  function tratarBuscaAssunto() {
+    const termo = els.buscaAssuntoInput.value;
+
+    if (!termo) {
+      els.buscaAssuntoDicaVazia.hidden = false;
+      els.buscaAssuntoSemResultado.hidden = true;
+      els.buscaAssuntoResultados.hidden = true;
+      return;
+    }
+    els.buscaAssuntoDicaVazia.hidden = true;
+
+    const resultados = buscarAssunto(termo);
+    if (resultados.length === 0) {
+      els.buscaAssuntoSemResultado.hidden = false;
+      els.buscaAssuntoResultados.hidden = true;
+      return;
+    }
+    els.buscaAssuntoSemResultado.hidden = true;
+    renderResultadosAssunto(resultados);
   }
 
   function chipHtml(codigo, rotulo, icone) {
@@ -263,6 +377,10 @@
     els.buscaInput.placeholder = t.busca_placeholder;
     els.buscaDicaVazia.innerHTML = t.busca_dica_vazia_html;
     els.buscaSemResultado.textContent = t.busca_sem_resultado;
+    els.buscaAssuntoLabel.textContent = t.busca_assunto_label;
+    els.buscaAssuntoInput.placeholder = t.busca_assunto_placeholder;
+    els.buscaAssuntoDicaVazia.innerHTML = t.busca_assunto_dica_vazia_html;
+    els.buscaAssuntoSemResultado.textContent = t.busca_assunto_sem_resultado;
     els.semEtapasRegencia.innerHTML = t.sem_etapas_regencia_html;
     els.rodapeFonte.textContent = t.rodape_fonte;
     els.rodapeDadosDe.textContent = `Dados de ${dados.unidades.dados_de}.`;
@@ -369,6 +487,8 @@
       return;
     }
 
+    indiceBusca = construirIndiceBusca(dados.busca.documentos);
+
     renderTextosEstaticos();
     configurarTabs();
     configurarPainelCaso();
@@ -378,12 +498,18 @@
       debounceId = setTimeout(tratarBusca, 150);
     });
 
+    els.buscaAssuntoInput.addEventListener("input", () => {
+      clearTimeout(debounceAssuntoId);
+      debounceAssuntoId = setTimeout(tratarBuscaAssunto, 150);
+    });
+
     els.buscaAusencia.addEventListener("input", () => {
       clearTimeout(debounceAusenciasId);
       debounceAusenciasId = setTimeout(() => renderTabelaAusencias(els.buscaAusencia.value), 150);
     });
 
     tratarBusca();
+    tratarBuscaAssunto();
     registrarServiceWorker();
     mostrarDicaInstalacaoIOS();
   }
