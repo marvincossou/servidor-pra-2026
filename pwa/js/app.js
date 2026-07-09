@@ -19,6 +19,11 @@
     buscaAssuntoDicaVazia: document.getElementById("busca-assunto-dica-vazia"),
     buscaAssuntoSemResultado: document.getElementById("busca-assunto-sem-resultado"),
     buscaAssuntoResultados: document.getElementById("busca-assunto-resultados"),
+    botaoPerguntarIA: document.getElementById("botao-perguntar-ia"),
+    iaStatus: document.getElementById("ia-status"),
+    respostaIA: document.getElementById("resposta-ia"),
+    respostaIAConteudo: document.getElementById("resposta-ia-conteudo"),
+    iaDisclaimer: document.getElementById("ia-disclaimer"),
     fichaUnidade: document.getElementById("ficha-unidade"),
     fichaTitulo: document.getElementById("ficha-titulo"),
     metricCre: document.getElementById("metric-cre"),
@@ -230,6 +235,10 @@
   function tratarBuscaAssunto() {
     const termo = els.buscaAssuntoInput.value;
 
+    els.botaoPerguntarIA.hidden = !termo;
+    els.iaStatus.hidden = true;
+    els.respostaIA.hidden = true;
+
     if (!termo) {
       els.buscaAssuntoDicaVazia.hidden = false;
       els.buscaAssuntoSemResultado.hidden = true;
@@ -246,6 +255,56 @@
     }
     els.buscaAssuntoSemResultado.hidden = true;
     renderResultadosAssunto(resultados);
+  }
+
+  function escaparHtml(texto) {
+    const div = document.createElement("div");
+    div.textContent = texto;
+    return div.innerHTML;
+  }
+
+  function destacarTitulosConhecidos(textoEscapado) {
+    let resultado = textoEscapado;
+    for (const { doc } of indiceBusca.docsProcessados) {
+      const tituloEscapado = escaparHtml(doc.titulo);
+      if (!tituloEscapado || !resultado.includes(tituloEscapado)) continue;
+      resultado = resultado.split(tituloEscapado).join(`<strong>${tituloEscapado}</strong>`);
+    }
+    return resultado;
+  }
+
+  async function perguntarIA() {
+    const pergunta = els.buscaAssuntoInput.value.trim();
+    if (!pergunta) return;
+
+    els.botaoPerguntarIA.disabled = true;
+    els.respostaIA.hidden = true;
+    els.iaStatus.hidden = false;
+    els.iaStatus.classList.remove("alerta-erro");
+    els.iaStatus.classList.add("alerta-info");
+    els.iaStatus.textContent = dados.estaticos.textos_ui.ia_carregando;
+
+    try {
+      const resposta = await fetch("/.netlify/functions/perguntar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pergunta }),
+      });
+      const corpo = await resposta.json();
+      if (!resposta.ok || !corpo.resposta) throw new Error(corpo.erro || "Resposta inválida");
+
+      const textoFormatado = destacarTitulosConhecidos(escaparHtml(corpo.resposta)).replace(/\n+/g, "<br><br>");
+      els.respostaIAConteudo.innerHTML = `<p>${textoFormatado}</p>`;
+      els.iaDisclaimer.textContent = dados.estaticos.textos_ui.ia_disclaimer;
+      els.iaStatus.hidden = true;
+      els.respostaIA.hidden = false;
+    } catch {
+      els.iaStatus.classList.remove("alerta-info");
+      els.iaStatus.classList.add("alerta-erro");
+      els.iaStatus.textContent = dados.estaticos.textos_ui.ia_erro;
+    } finally {
+      els.botaoPerguntarIA.disabled = false;
+    }
   }
 
   function chipHtml(codigo, rotulo, icone) {
@@ -380,6 +439,7 @@
     els.buscaAssuntoInput.placeholder = t.busca_assunto_placeholder;
     els.buscaAssuntoDicaVazia.innerHTML = t.busca_assunto_dica_vazia_html;
     els.buscaAssuntoSemResultado.textContent = t.busca_assunto_sem_resultado;
+    els.botaoPerguntarIA.textContent = t.botao_perguntar_ia;
     els.semEtapasRegencia.innerHTML = t.sem_etapas_regencia_html;
     els.rodapeFonte.textContent = t.rodape_fonte;
     els.rodapeDadosDe.textContent = `Dados de ${dados.unidades.dados_de}.`;
@@ -500,6 +560,8 @@
       clearTimeout(debounceAssuntoId);
       debounceAssuntoId = setTimeout(tratarBuscaAssunto, 150);
     });
+
+    els.botaoPerguntarIA.addEventListener("click", perguntarIA);
 
     els.buscaAusencia.addEventListener("input", () => {
       clearTimeout(debounceAusenciasId);

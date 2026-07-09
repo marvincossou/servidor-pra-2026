@@ -2,11 +2,45 @@
 
 ## Status (2026-07-09)
 
-MVP da PRA 2026 (commit inicial já feito) + nova funcionalidade: busca por
-assunto na legislação, usando TF-IDF/sinônimos calculado no navegador (sem
-IA em tempo de execução, mantendo o app 100% estático/offline).
+MVP da PRA 2026 + busca por assunto (TF-IDF client-side) + resposta em
+linguagem natural via IA (Groq) citando a legislação. Netlify já conectado
+ao GitHub (deploy contínuo) — falta só o usuário configurar a API key da
+Groq para a parte de IA funcionar em produção (ver "Pendências").
 
-## O que foi feito nesta sessão (2026-07-09)
+## Pendências (só o usuário consegue fazer)
+
+1. Criar conta em **console.groq.com**, gerar uma API key.
+2. Adicionar `GROQ_API_KEY` (e opcionalmente `GROQ_MODEL`, padrão
+   `llama-3.3-70b-versatile`) em **Netlify → servidor-pra-2026 → Site
+   configuration → Environment variables**. Sem isso, o botão "🤖 Perguntar
+   para a IA" sempre cai no fallback de erro amigável (comportamento já
+   verificado e correto, só falta a chave para responder de verdade).
+
+## Resposta por IA (Groq) — 2026-07-09
+
+- `netlify/functions/perguntar.js` (novo): Netlify Function (Node, sem
+  dependências novas) que busca `dist/dados/busca.json` (mesmo índice da
+  busca por palavra-chave, fonte única `src/busca_legislacao.py`), monta um
+  prompt de sistema instruindo o modelo a responder SÓ com base nesses
+  trechos, sempre citando o título do documento, dizendo "não sei, consulte
+  a CTRH" quando não souber, e nunca mencionar R$/metas. Chama a API da Groq
+  (`llama-3.3-70b-versatile` por padrão). Guard-rail defensivo: se a
+  resposta do modelo contiver `R$\d`, é bloqueada antes de chegar ao cliente.
+- `netlify.toml`: `[functions] directory = "netlify/functions"`.
+- `pwa/index.html` + `pwa/js/app.js`: botão "🤖 Perguntar para a IA" abaixo da
+  busca por assunto (reaproveita o texto já digitado), chama
+  `/.netlify/functions/perguntar`, destaca títulos de documentos conhecidos
+  na resposta, mostra disclaimer fixo, e cai num fallback amigável se a
+  function falhar/estiver offline — sem quebrar o resto do app.
+- Verificado com Playwright headless (script ad-hoc, não commitado): botão
+  aparece/some corretamente ao digitar, e o fallback de erro funciona
+  (testado sem a function rodando — só dá pra testar a resposta real da IA
+  depois que a `GROQ_API_KEY` estiver configurada no Netlify).
+- Limitações conhecidas, aceitas para este MVP: sem rate limiting real (só
+  cap de tamanho da pergunta), sem teste automatizado da function (projeto
+  não tem infra de teste JS).
+
+## O que foi feito na sessão anterior (2026-07-09, busca por assunto)
 
 - `src/busca_legislacao.py` (novo): monta o índice de documentos pesquisáveis
   — glossário, indicadores I-IX, pendências de verificação, elegibilidade,

@@ -48,6 +48,7 @@ from src.regras_pra_2026 import (  # noqa: E402
 from src.textos_ui import (
     AVISO_ESCOPO,
     AVISO_ESCOPO_TITULO,
+    BOTAO_PERGUNTAR_IA,
     BUSCA_ASSUNTO_DICA_VAZIA,
     BUSCA_ASSUNTO_LABEL,
     BUSCA_ASSUNTO_PLACEHOLDER,
@@ -56,6 +57,9 @@ from src.textos_ui import (
     BUSCA_LABEL,
     BUSCA_PLACEHOLDER,
     BUSCA_SEM_RESULTADO,
+    IA_CARREGANDO,
+    IA_DISCLAIMER,
+    IA_ERRO,
     INTRO,
     RODAPE_FONTE,
     SEM_ETAPAS_REGENCIA,
@@ -202,6 +206,10 @@ def _gerar_estaticos_json() -> dict:
             "busca_assunto_placeholder": BUSCA_ASSUNTO_PLACEHOLDER,
             "busca_assunto_dica_vazia_html": _md_para_html(BUSCA_ASSUNTO_DICA_VAZIA),
             "busca_assunto_sem_resultado": BUSCA_ASSUNTO_SEM_RESULTADO,
+            "botao_perguntar_ia": BOTAO_PERGUNTAR_IA,
+            "ia_carregando": IA_CARREGANDO,
+            "ia_disclaimer": IA_DISCLAIMER,
+            "ia_erro": IA_ERRO,
         },
     }
 

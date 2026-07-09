@@ -2,6 +2,9 @@
   command = "pip install -r requirements-build.txt && python scripts/build_pwa.py --saida dist"
   publish = "dist"
 
+[functions]
+  directory = "netlify/functions"
+
 [[headers]]
   for = "/sw.js"
   [headers.values]
