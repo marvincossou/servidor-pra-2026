@@ -11,7 +11,7 @@ commits recentes (remoção das sugestões de CTRH) estão no GitHub mas ainda
 não publicados lá.
 
 **Auto-hospedagem no servidor de casa JÁ NO AR**, publicamente, via Tailscale
-Funnel: **https://servidor.tail3e4254.ts.net** — testado ao vivo (busca por
+Funnel: **https://pra2026.tail3e4254.ts.net** — testado ao vivo (busca por
 escola + busca por IA) com Playwright headless, funcionando 100%. Netlify
 continua existindo em paralelo (sem créditos até ~22/07).
 
@@ -24,8 +24,15 @@ continua existindo em paralelo (sem créditos até ~22/07).
 - `netlify/functions/perguntar.js`: virou um adaptador fino sobre
   `lib/perguntar-core.js` (mesmo comportamento de antes, só refatorado).
 - `server/server.js` (novo): servidor Node puro (sem dependências), rodando
-  de fato no servidor Linux de casa do usuário (`servidor`, Debian 13,
-  `100.93.68.121` na tailnet) atrás do **Tailscale Funnel**.
+  de fato no servidor Linux de casa do usuário (hostname na tailnet
+  renomeado de `servidor` para `pra2026`, Debian 13, `100.93.68.121`) atrás
+  do **Tailscale Funnel**.
+- Pasta do projeto (`/home/marcus/pra-2026-pwa`) também exposta como
+  armazenamento externo no Nextcloud (`occ files_external:create`, ID 2,
+  aplicável a "All"), visível no app do celular como "PRA 2026 PWA" — foi
+  preciso liberar ACL (`setfacl -m u:www-data:x /home/marcus` +
+  `setfacl -R -m u:www-data:rX .../pra-2026-pwa`) porque `/home/marcus` é
+  `700` e o Nextcloud roda como `www-data`.
 - Implantado como **serviço systemd de usuário** (`~/.config/systemd/user/pra-2026-pwa.service`,
   não o template de sistema em `server/pra-2026-pwa.service` — esse ficou só
   como referência/alternativa). Rodando como usuário `marcus`, com
