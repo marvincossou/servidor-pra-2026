@@ -425,6 +425,41 @@ summary {
   vertical-align: top;
 }
 
+.tabela-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  margin: 12px 0;
+}
+
+.tabela-scroll table {
+  width: 100%;
+  min-width: 480px;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.tabela-scroll th, .tabela-scroll td {
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--borda);
+  white-space: nowrap;
+}
+
+.tabela-scroll th:first-child, .tabela-scroll td:first-child {
+  white-space: normal;
+  min-width: 220px;
+}
+
+.tabela-scroll thead th {
+  background: var(--fundo-alt);
+  position: sticky;
+  top: 0;
+}
+
+.tabela-scroll tbody tr:last-child td { border-bottom: none; }
+
 #faq-lista details { margin: 8px 0; }
 
 footer { margin-top: 32px; padding-bottom: 32px; }

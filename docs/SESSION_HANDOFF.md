@@ -1,5 +1,53 @@
 # Session Handoff
 
+## Metas reais por escola (Anexos I/II) — 2026-07-09 (noite) — MUDANÇA DE ESCOPO
+
+O usuário pediu para ler o PDF `PRA_2026 ANEXOS RESOLUÇÃO SME N.º 561.pdf`
+(fora do repo, em `OneDrive/AR PRA 2026/AR-PRA 2026 LEGISLAÇÃO/`), convertê-lo
+em CSV e usar no painel. Isso conflitava com a restrição original do
+`CLAUDE.md` ("NÃO exibe... metas reais de cada indicador por escola... fora
+do escopo deste MVP"). Perguntei; o usuário confirmou que quer mesmo assim
+porque **são dados públicos** (Anexo oficial já publicado, não é valor
+calculado de premiação em R$). Isso expandiu o escopo do MVP
+permanentemente — `CLAUDE.md` foi atualizado para refletir isso (a restrição
+agora é só sobre R$/nota final, não mais sobre metas reais).
+
+O que foi feito:
+- `base/metas_pra_2026.csv` (novo): conversão fiel do PDF (`pdftotext -layout`
+  + parsing manual, script ad-hoc não versionado), formato largo (uma linha
+  por designação, 8 grupos de indicador × 3 colunas). 996 designações únicas.
+  Célula vazia = indicador não se aplica (foi substituído pelo indicador
+  irmão — ex.: III/IV ficam vazios quando VII se aplica). Quando
+  Resultado/Meta estão presentes mas o PDF tinha "-" no Crescimento Esperado,
+  gravei `crescimento_esperado = 0` — validei empiricamente que, nas 424
+  ocorrências desse padrão no PDF, Resultado sempre era ≥ Meta (meta já
+  atingida), zero anomalias.
+- `pwa/legislacao/pra-2026-anexos-metas.pdf` (novo): cópia do PDF original,
+  linkado na seção "Legislação" da PWA, para transparência da fonte.
+- `src/metas_pra_2026.py` (novo): `carregar_metas()` (por designação, lista
+  de indicadores aplicáveis) + `descricoes_indicadores()` (descrição/unidade
+  de cada indicador I-VIII, que não variam por escola).
+- `scripts/build_pwa.py`: `_gerar_metas_json` grava `dist/dados/metas.json`
+  em formato **colunar** (arrays `[indicador, resultado, meta, crescimento]`,
+  não dicts) — a primeira versão com dicts + texto completo por escola dava
+  855 KB; com descrições/disclaimer movidos para um bloco compartilhado
+  (`indicadores_metas`) e linhas como arrays, caiu para ~82 KB. Loga aviso
+  (não falha o build) para designações do CSV sem correspondência em
+  `dp_sme.xlsx` (8 casos — provavelmente unidades fechadas/renomeadas).
+- `pwa/index.html` + `pwa/js/app.js`: nova 4ª aba "🎯 Metas 2026" (só
+  aparece quando a unidade tem dados — 996 de 1580; volta para "Meu caso" se
+  estava ativa e a nova escola não tem metas). Tabela renderizada em JS a
+  partir dos números crus + o bloco compartilhado de descrições — formatação
+  de exibição (`%`, vírgula decimal) é a única "lógica" no JS, não é regra de
+  negócio (os números já vêm prontos do build).
+- Testes novos: `tests/test_metas_pra_2026.py` (casos conferidos manualmente
+  no PDF) + paridade em `tests/test_build_pwa.py`. Total: 101 testes, todos
+  passando.
+- **Pendente desta sessão**: commit ainda não feito (aguardando o usuário
+  revisar); build local gerado em `dist_deploy/` mas não verificado
+  visualmente no navegador ainda; não publicado (GitHub nem servidor de
+  casa).
+
 ## Questionário interativo de elegibilidade + acessibilidade — 2026-07-09 (tarde)
 
 Cinco commits (dda9f1f..cafc9db), todos com pytest verde (91 testes):

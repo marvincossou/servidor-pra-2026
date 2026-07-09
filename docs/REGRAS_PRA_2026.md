@@ -5,8 +5,12 @@
 > Este documento resume as regras usadas pela PWA para **explicar** o
 > cálculo da Premiação por Resultados de Aprendizagem (PRA) 2026, com
 > referência aos artigos correspondentes. A PWA não exibe valores numéricos
-> já calculados nem as metas reais de cada indicador por escola (elas estão
-> nos Anexos da Resolução, fora do escopo deste painel).
+> já calculados de premiação (R$) nem a nota/score final. As metas reais de
+> cada indicador por escola (Resultado, Meta 2026, Crescimento Esperado) são
+> exibidas na aba "Metas 2026" — convertidas de
+> `pwa/legislacao/pra-2026-anexos-metas.pdf` (Anexos I e II) para
+> `base/metas_pra_2026.csv`, lido por `src/metas_pra_2026.py`. São dados
+> públicos, já publicados oficialmente.
 >
 > Em caso de dúvida sobre um caso específico, consulte sempre a Resolução
 > SME nº 561/2026 e a CTRH da sua unidade.

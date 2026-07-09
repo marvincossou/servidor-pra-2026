@@ -5,9 +5,9 @@
 
 ## 📌 Projeto
 - **Nome:** pra-2026-pwa
-- **Objetivo:** PWA (instalável, offline-first) publicada no Netlify onde o servidor busca sua unidade e entende, em linguagem simples, como funciona sua Premiação por Resultados de Aprendizagem (PRA) 2026 — quais indicadores contam para o seu cargo, como a nota de 0 a 1 é calculada a partir do crescimento esperado, e se tem direito. NÃO exibe valores numéricos calculados de premiação nem as metas reais de cada indicador por escola (essas estão nos Anexos da Resolução, fora do escopo deste MVP).
+- **Objetivo:** PWA (instalável, offline-first) publicada no Netlify onde o servidor busca sua unidade e entende, em linguagem simples, como funciona sua Premiação por Resultados de Aprendizagem (PRA) 2026 — quais indicadores contam para o seu cargo, como a nota de 0 a 1 é calculada a partir do crescimento esperado, se tem direito, e (aba "Metas 2026") as metas oficiais reais de cada indicador da sua escola. NÃO exibe valores numéricos **calculados de premiação (R$)** nem a nota/score final — isso continua fora do escopo deste MVP.
 - **Projeto irmão:** `dashboard-servidor` (painel Streamlit + PWA da PRA 2025, pasta separada). Este projeto é independente — nenhum arquivo de lá é referenciado ou modificado a partir daqui.
-- **Status atual:** MVP implementado — motor de regras em `src/`, build estático em `scripts/build_pwa.py`, PWA em `pwa/`, 80 testes passando.
+- **Status atual:** MVP implementado — motor de regras em `src/`, build estático em `scripts/build_pwa.py`, PWA em `pwa/`, 101 testes passando.
 
 ## 🛠️ Stack Tecnológica
 - **Build:** Python 3.13 (pandas, openpyxl, markdown) — só gera os dados/HTML em tempo de build, não roda em produção.
@@ -24,13 +24,16 @@
 ├── src/
 │   ├── dados.py                → carregar_unidades/buscar_unidades (decodifica bits de base/dp_sme.xlsx)
 │   ├── regras_pra_2026.py      → motor de regras explicativas da PRA 2026 (não calcula valores)
+│   ├── metas_pra_2026.py       → metas reais por escola (Anexos I/II, base/metas_pra_2026.csv) — dados públicos
 │   ├── faq.py                  → perguntas frequentes (com status documentado/operacional/pendente_ctrh)
 │   └── textos_ui.py            → textos fixos de interface, fonte única para o build
 ├── pwa/                        → app shell (index.html, css/, js/app.js, sw.js, manifest, icons/, assets/)
 │   └── legislacao/
-│       └── resolucao-sme-561-2026-pra.pdf
+│       ├── resolucao-sme-561-2026-pra.pdf
+│       └── pra-2026-anexos-metas.pdf   → Anexos I/II (fonte de base/metas_pra_2026.csv)
 ├── base/                       → dados de entrada
-│   └── dp_sme.xlsx             → cadastro de unidades (CRE, denominação, etapas/modalidades) — não é específico de um ano de PRA
+│   ├── dp_sme.xlsx             → cadastro de unidades (CRE, denominação, etapas/modalidades) — não é específico de um ano de PRA
+│   └── metas_pra_2026.csv      → metas reais (Resultado/Meta 2026/Crescimento Esperado) por escola, convertido dos Anexos I/II
 ├── docs/
 │   ├── REGRAS_PRA_2026.md      → referência resumida das regras da PRA 2026
 │   └── SESSION_HANDOFF.md
@@ -65,7 +68,7 @@ pytest tests/                          # rodar testes
 
 ## 🚫 Restrições Importantes
 - NÃO modificar arquivos do projeto irmão `dashboard-servidor` a partir daqui.
-- NÃO exibir valores numéricos calculados de premiação, nem metas reais de indicador por escola (guard-rail testado em `scripts/build_pwa.py::_verificar_sem_valores_monetarios`).
+- NÃO exibir valores numéricos **calculados de premiação (R$)** nem a nota/score final (guard-rail testado em `scripts/build_pwa.py::_verificar_sem_valores_monetarios`). As metas reais por indicador/escola (Resultado, Meta 2026, Crescimento Esperado) **são exibidas** desde 2026-07-09 — são dados públicos, já publicados nos Anexos I/II da Resolução (decisão explícita do usuário, ver `docs/SESSION_HANDOFF.md`).
 - NÃO "corrigir" silenciosamente ambiguidades do texto da Resolução — sinalizar em `PENDENCIAS_VERIFICACAO` e na seção de Transparência da PWA.
 - SEMPRE confirmar antes de: expor dados pessoais de servidores (atenção à LGPD) ou alterar a interpretação de um artigo sem checar o Diário Oficial.
 

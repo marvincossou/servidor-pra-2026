@@ -32,9 +32,13 @@
     tabCaso: document.getElementById("tab-caso"),
     tabCalculo: document.getElementById("tab-calculo"),
     tabElegibilidade: document.getElementById("tab-elegibilidade"),
+    tabMetas: document.getElementById("tab-metas"),
     painelCaso: document.getElementById("painel-caso"),
     painelCalculo: document.getElementById("painel-calculo"),
     painelElegibilidade: document.getElementById("painel-elegibilidade"),
+    painelMetas: document.getElementById("painel-metas"),
+    tabelaMetasCorpo: document.getElementById("tabela-metas-corpo"),
+    disclaimerMetas: document.getElementById("disclaimer-metas"),
     fieldsetPapel: document.getElementById("fieldset-papel"),
     selectEtapaContainer: document.getElementById("select-etapa-container"),
     selectEtapa: document.getElementById("select-etapa"),
@@ -78,13 +82,14 @@
   }
 
   async function carregarDados() {
-    const [unidades, perfis, estaticos, busca] = await Promise.all([
+    const [unidades, perfis, estaticos, busca, metas] = await Promise.all([
       fetch("./dados/unidades.json").then((r) => r.json()),
       fetch("./dados/perfis.json").then((r) => r.json()),
       fetch("./dados/estaticos.json").then((r) => r.json()),
       fetch("./dados/busca.json").then((r) => r.json()),
+      fetch("./dados/metas.json").then((r) => r.json()),
     ]);
-    return { unidades, perfis: perfis.perfis, estaticos, busca };
+    return { unidades, perfis: perfis.perfis, estaticos, busca, metas };
   }
 
   function linhaParaObjeto(colunas, linha) {
@@ -286,10 +291,45 @@
       : "<em>Nenhuma etapa identificada para esta unidade.</em>";
 
     renderPainelCaso();
+    renderMetas2026(unidade.designacao);
 
     els.fichaUnidade.hidden = false;
     els.fichaTitulo.focus({ preventScroll: true });
     els.fichaUnidade.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  // Formatação apenas de apresentação (nenhum valor é calculado aqui — os
+  // números já vêm prontos do build): "pp" = ponto percentual, "pontos" =
+  // escala IDERio (0-10), "indice" = Indicador de Rendimento (0-1).
+  function formatarValorMeta(valor, unidade) {
+    if (unidade === "pp") return `${valor.toFixed(0)}%`;
+    if (unidade === "pontos") return valor.toFixed(1).replace(".", ",");
+    return valor.toFixed(2).replace(".", ","); // "indice"
+  }
+
+  function renderMetas2026(designacao) {
+    const linhas = dados.metas.por_designacao[String(designacao)];
+    const disponivel = Boolean(linhas && linhas.length);
+    els.tabMetas.hidden = !disponivel;
+    if (els.tabMetas.getAttribute("aria-selected") === "true" && !disponivel) {
+      ativarTab(els.tabCaso.id);
+    }
+    if (!disponivel) return;
+
+    const { indicadores_metas: descricoes } = dados.metas;
+    els.disclaimerMetas.innerHTML = dados.metas.disclaimer_html;
+    els.tabelaMetasCorpo.innerHTML = "";
+    for (const [indicador, resultado, meta, crescimento] of linhas) {
+      const { descricao, unidade } = descricoes[indicador];
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${descricao}</td>
+        <td>${formatarValorMeta(resultado, unidade)}</td>
+        <td>${formatarValorMeta(meta, unidade)}</td>
+        <td>${formatarValorMeta(crescimento, unidade)}</td>
+      `;
+      els.tabelaMetasCorpo.appendChild(tr);
+    }
   }
 
   function renderPainelCaso() {
@@ -317,13 +357,15 @@
     }
   }
 
+  const PARES_TAB = [
+    [els.tabCaso, els.painelCaso],
+    [els.tabCalculo, els.painelCalculo],
+    [els.tabElegibilidade, els.painelElegibilidade],
+    [els.tabMetas, els.painelMetas],
+  ];
+
   function ativarTab(tabId) {
-    const tabs = [
-      [els.tabCaso, els.painelCaso],
-      [els.tabCalculo, els.painelCalculo],
-      [els.tabElegibilidade, els.painelElegibilidade],
-    ];
-    for (const [tab, painel] of tabs) {
+    for (const [tab, painel] of PARES_TAB) {
       const ativo = tab.id === tabId;
       tab.setAttribute("aria-selected", String(ativo));
       painel.hidden = !ativo;
@@ -331,15 +373,19 @@
   }
 
   function configurarTabs() {
-    const tabs = [els.tabCaso, els.tabCalculo, els.tabElegibilidade];
-    tabs.forEach((tab, i) => {
+    const tabs = PARES_TAB.map(([tab]) => tab);
+    tabs.forEach((tab) => {
       tab.addEventListener("click", () => ativarTab(tab.id));
       tab.addEventListener("keydown", (ev) => {
         if (ev.key !== "ArrowRight" && ev.key !== "ArrowLeft") return;
         ev.preventDefault();
-        const proximo = ev.key === "ArrowRight" ? (i + 1) % tabs.length : (i - 1 + tabs.length) % tabs.length;
-        tabs[proximo].focus();
-        ativarTab(tabs[proximo].id);
+        const visiveis = tabs.filter((t) => !t.hidden);
+        const atual = visiveis.indexOf(tab);
+        if (atual === -1) return;
+        const delta = ev.key === "ArrowRight" ? 1 : -1;
+        const proximo = visiveis[(atual + delta + visiveis.length) % visiveis.length];
+        proximo.focus();
+        ativarTab(proximo.id);
       });
     });
   }

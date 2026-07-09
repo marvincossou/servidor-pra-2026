@@ -120,6 +120,7 @@
       <button type="button" role="tab" id="tab-caso" aria-selected="true" aria-controls="painel-caso">👤 Meu caso</button>
       <button type="button" role="tab" id="tab-calculo" aria-selected="false" aria-controls="painel-calculo">🧮 Como é calculado</button>
       <button type="button" role="tab" id="tab-elegibilidade" aria-selected="false" aria-controls="painel-elegibilidade">📋 Tenho direito?</button>
+      <button type="button" role="tab" id="tab-metas" aria-selected="false" aria-controls="painel-metas" hidden>🎯 Metas 2026</button>
     </div>
 
     <div id="painel-caso" role="tabpanel" aria-labelledby="tab-caso">
@@ -174,6 +175,23 @@
       </details>
     </div>
 
+    <div id="painel-metas" role="tabpanel" aria-labelledby="tab-metas" hidden>
+      <div class="tabela-scroll">
+        <table id="tabela-metas">
+          <thead>
+            <tr>
+              <th>Indicador</th>
+              <th>Resultado</th>
+              <th>Meta 2026</th>
+              <th>Crescimento Esperado</th>
+            </tr>
+          </thead>
+          <tbody id="tabela-metas-corpo"></tbody>
+        </table>
+      </div>
+      <div id="disclaimer-metas" class="alerta alerta-info conteudo-md"></div>
+    </div>
+
     <hr>
     <h2>❓ Dúvidas frequentes</h2>
     <div id="faq-lista"></div>
@@ -184,6 +202,7 @@
     <p>Consulte na íntegra as normas da SME-Rio que tratam da PRA 2026:</p>
     <ul>
       <li><a href="./legislacao/resolucao-sme-561-2026-pra.pdf" download>⬇️ Resolução SME nº 561/2026 — regras da PRA 2026</a></li>
+      <li><a href="./legislacao/pra-2026-anexos-metas.pdf" download>⬇️ Anexos I e II — metas oficiais de cada indicador por escola</a></li>
     </ul>
   </details>
 </main>

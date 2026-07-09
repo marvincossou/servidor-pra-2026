@@ -30,6 +30,11 @@ sys.path.insert(0, str(RAIZ))
 from src.busca_legislacao import documentos_busca  # noqa: E402
 from src.dados import ETAPAS_BITS, MODALIDADES_PD, carregar_unidades  # noqa: E402
 from src.faq import faq_visivel  # noqa: E402
+from src.metas_pra_2026 import (  # noqa: E402
+    DISCLAIMER_METAS,
+    carregar_metas,
+    descricoes_indicadores,
+)
 from src.regras_pra_2026 import (  # noqa: E402
     ETAPA_ICONS,
     ETAPA_LABELS,
@@ -259,6 +264,39 @@ def _gerar_estaticos_json() -> dict:
     }
 
 
+def _gerar_metas_json(df: pd.DataFrame) -> dict:
+    """Metas reais por escola (Anexos I/II), quando existirem para a
+    designação — dados públicos, ver src/metas_pra_2026.py. Só os números por
+    escola: descrição/unidade de cada indicador (que não variam por escola)
+    ficam em estaticos.json (indicadores_metas), para não repetir texto ~988
+    vezes. Ausência de chave = escola sem indicador aplicável nesta fonte
+    (ex.: só EI/EJA/EE/UE/Biblioteca), tratado pelo JS ocultando a aba "Metas
+    2026"."""
+    metas = carregar_metas()
+    designacoes_df = set(df["designacao"].astype(int))
+
+    orfas_no_csv = set(metas) - designacoes_df
+    if orfas_no_csv:
+        print(
+            f"Aviso: {len(orfas_no_csv)} designação(ões) do CSV de metas não "
+            f"encontradas em dp_sme.xlsx (ex.: {sorted(orfas_no_csv)[:5]})."
+        )
+
+    return {
+        "colunas": ["indicador", "resultado", "meta_2026", "crescimento_esperado"],
+        "por_designacao": {
+            str(designacao): [
+                [item["indicador"], item["resultado"], item["meta_2026"], item["crescimento_esperado"]]
+                for item in indicadores
+            ]
+            for designacao, indicadores in metas.items()
+            if designacao in designacoes_df
+        },
+        "indicadores_metas": descricoes_indicadores(),
+        "disclaimer_html": _md_para_html(DISCLAIMER_METAS),
+    }
+
+
 def _gerar_busca_json() -> dict:
     """Índice de documentos para a busca por assunto (TF-IDF calculado no
     navegador, ver `pwa/js/app.js`). Fonte: `src/busca_legislacao.py`."""
@@ -308,13 +346,16 @@ def gerar_build(pasta_saida: Path) -> dict:
     unidades_json = _gerar_unidades_json(df, indice_por_chave)
     estaticos_json = _gerar_estaticos_json()
     busca_json = _gerar_busca_json()
+    metas_json = _gerar_metas_json(df)
 
     if len(unidades_json["unidades"]) != len(df):
         raise SystemExit("ERRO: nem toda unidade recebeu uma linha em unidades.json.")
     if any(linha[-1] >= len(perfis) for linha in unidades_json["unidades"]):
         raise SystemExit("ERRO: unidade referenciando perfil inexistente.")
 
-    _verificar_sem_valores_monetarios({"perfis": perfis}, unidades_json, estaticos_json, busca_json)
+    _verificar_sem_valores_monetarios(
+        {"perfis": perfis}, unidades_json, estaticos_json, busca_json, metas_json
+    )
 
     dados_de = datetime.date.today().strftime("%d/%m/%Y")
     unidades_json["dados_de"] = dados_de
@@ -333,6 +374,9 @@ def gerar_build(pasta_saida: Path) -> dict:
     )
     (pasta_dados / "busca.json").write_text(
         json.dumps(busca_json, ensure_ascii=False, separators=(",", ":")), encoding="utf-8"
+    )
+    (pasta_dados / "metas.json").write_text(
+        json.dumps(metas_json, ensure_ascii=False, separators=(",", ":")), encoding="utf-8"
     )
 
     # Copia o app shell quando existir; o build de dados funciona mesmo
@@ -364,6 +408,7 @@ def gerar_build(pasta_saida: Path) -> dict:
         "tamanho_perfis_json": (pasta_dados / "perfis.json").stat().st_size,
         "tamanho_estaticos_json": (pasta_dados / "estaticos.json").stat().st_size,
         "tamanho_busca_json": (pasta_dados / "busca.json").stat().st_size,
+        "tamanho_metas_json": (pasta_dados / "metas.json").stat().st_size,
     }
 
 
@@ -395,6 +440,7 @@ def main() -> None:
     print(f"perfis.json: {resumo['tamanho_perfis_json'] / 1024:.1f} KB")
     print(f"estaticos.json: {resumo['tamanho_estaticos_json'] / 1024:.1f} KB")
     print(f"busca.json: {resumo['tamanho_busca_json'] / 1024:.1f} KB")
+    print(f"metas.json: {resumo['tamanho_metas_json'] / 1024:.1f} KB")
 
 
 if __name__ == "__main__":

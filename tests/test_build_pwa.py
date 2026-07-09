@@ -15,6 +15,7 @@ import pytest
 from scripts.build_pwa import _md_para_html, gerar_build
 from src.dados import _normalizar, carregar_unidades
 from src.faq import faq_visivel
+from src.metas_pra_2026 import carregar_metas, descricoes_indicadores
 from src.regras_pra_2026 import (
     cargos_disponiveis,
     combinacoes_respostas_elegibilidade,
@@ -57,12 +58,14 @@ def build(tmp_path_factory):
     perfis_json = json.loads((pasta / "dados" / "perfis.json").read_text(encoding="utf-8"))
     estaticos_json = json.loads((pasta / "dados" / "estaticos.json").read_text(encoding="utf-8"))
     busca_json = json.loads((pasta / "dados" / "busca.json").read_text(encoding="utf-8"))
+    metas_json = json.loads((pasta / "dados" / "metas.json").read_text(encoding="utf-8"))
     return {
         "resumo": resumo,
         "unidades": unidades_json,
         "perfis": perfis_json["perfis"],
         "estaticos": estaticos_json,
         "busca": busca_json,
+        "metas": metas_json,
     }
 
 
@@ -142,7 +145,13 @@ def test_faq_do_build_nao_contem_pendente_ctrh(build):
 def test_nenhum_json_contem_valor_monetario(build):
     import re
 
-    for bloco in (build["unidades"], {"perfis": build["perfis"]}, build["estaticos"], build["busca"]):
+    for bloco in (
+        build["unidades"],
+        {"perfis": build["perfis"]},
+        build["estaticos"],
+        build["busca"],
+        build["metas"],
+    ):
         texto = json.dumps(bloco, ensure_ascii=False)
         assert not re.search(r"R\$\s*\d", texto)
 
@@ -245,3 +254,29 @@ def test_tabela_de_conclusoes_e_exaustiva_e_bate_com_o_motor(build):
         assert _md_para_html(md) in conclusoes[tabela[chave]], (
             f"conclusão divergente para a chave {chave}"
         )
+
+
+def test_metas_no_build_batem_com_o_motor(build):
+    metas_motor = carregar_metas()
+    metas_build = build["metas"]
+
+    assert metas_build["colunas"] == ["indicador", "resultado", "meta_2026", "crescimento_esperado"]
+    assert metas_build["indicadores_metas"] == descricoes_indicadores()
+
+    for designacao in (101003, 107008, 206001):
+        esperado = [
+            [item["indicador"], item["resultado"], item["meta_2026"], item["crescimento_esperado"]]
+            for item in metas_motor[designacao]
+        ]
+        assert metas_build["por_designacao"][str(designacao)] == esperado
+
+
+def test_metas_so_existem_para_designacoes_da_base_de_unidades(df, build):
+    designacoes_df = set(df["designacao"].astype(int))
+    for designacao_str in build["metas"]["por_designacao"]:
+        assert int(designacao_str) in designacoes_df
+
+
+def test_escola_so_infantil_nao_tem_aba_de_metas_no_build(build):
+    # 1001 é Biblioteca Escolar exclusiva — sem AI/AF, sem indicador nesta fonte.
+    assert "1001" not in build["metas"]["por_designacao"]
