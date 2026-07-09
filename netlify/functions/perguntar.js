@@ -8,6 +8,11 @@ const PADRAO_VALOR_MONETARIO = /R\$\s*\d/;
 const TAMANHO_MAXIMO_PERGUNTA = 300;
 const TAMANHO_MAXIMO_CONTEXTO_UNIDADE = 2000;
 
+// Cache em memória do processo: containers "quentes" do Netlify reaproveitam
+// esta variável entre chamadas, evitando refazer a busca de busca.json a
+// cada pergunta. Um novo deploy sempre cria um container novo (cache vazio).
+let documentosCache = null;
+
 function montarPromptSistema(documentos, contextoUnidade) {
   const trechos = documentos.map((doc) => `### ${doc.titulo}\n${doc.texto}`).join("\n\n");
 
@@ -18,9 +23,10 @@ function montarPromptSistema(documentos, contextoUnidade) {
   return `Você é um assistente que explica as regras da Premiação por Resultados de Aprendizagem (PRA) 2026 da SME-Rio (Resolução SME nº 561/2026), com base EXCLUSIVAMENTE nos trechos abaixo${contextoUnidade ? " e no contexto da escola/cargo do servidor, quando fornecido" : ""}.
 
 Regras obrigatórias:
-- Responda sempre em português, de forma direta e simples.
+- Responda sempre em português, de forma direta e simples. Não comece com saudações genéricas ("Olá!", "Claro, posso ajudar!") — vá direto à resposta.
 - Toda informação que você der precisa citar o título do documento de origem, entre parênteses. Exemplo: "(Fonte: Tenho direito à PRA?)".
 - Se a resposta não estiver claramente nos trechos fornecidos, diga isso explicitamente e oriente o servidor a consultar a CTRH (Comissão Técnica de Recursos Humanos) da sua CRE ou os canais oficiais da SME. Nunca invente uma regra que não esteja nos trechos.
+- Se o servidor comparar o caso dele com o de um colega (ex.: "fulano recebeu e eu não"), não tente adivinhar o motivo da diferença — explique os critérios de elegibilidade que se aplicam e oriente a confirmar o caso específico com a CTRH.
 - Nunca informe valores em reais (R$) nem metas numéricas de indicadores por escola — esse painel não trabalha com esses dados.
 
 Trechos disponíveis:
@@ -62,15 +68,19 @@ exports.handler = async (event) => {
     return { statusCode: 503, body: JSON.stringify({ erro: "Recurso de IA não está configurado neste momento." }) };
   }
 
-  const origem = new URL(event.rawUrl || `https://${event.headers.host}`).origin;
-
   let documentos;
-  try {
-    const respostaBusca = await fetch(`${origem}/dados/busca.json`);
-    if (!respostaBusca.ok) throw new Error("busca.json indisponível");
-    ({ documentos } = await respostaBusca.json());
-  } catch {
-    return { statusCode: 502, body: JSON.stringify({ erro: "Não foi possível carregar a base de documentos." }) };
+  if (documentosCache) {
+    documentos = documentosCache;
+  } else {
+    const origem = new URL(event.rawUrl || `https://${event.headers.host}`).origin;
+    try {
+      const respostaBusca = await fetch(`${origem}/dados/busca.json`);
+      if (!respostaBusca.ok) throw new Error("busca.json indisponível");
+      ({ documentos } = await respostaBusca.json());
+      documentosCache = documentos;
+    } catch {
+      return { statusCode: 502, body: JSON.stringify({ erro: "Não foi possível carregar a base de documentos." }) };
+    }
   }
 
   let respostaGroq;
