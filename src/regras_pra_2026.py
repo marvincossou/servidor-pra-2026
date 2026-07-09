@@ -492,22 +492,241 @@ def cargos_disponiveis(unidade: pd.Series) -> list[tuple[str, str]]:
     return opcoes
 
 
+# Critérios de elegibilidade individual (Arts. 7º e 8º da Resolução), na
+# ordem em que aparecem no questionário interativo. Fonte única tanto para o
+# texto corrido (explicar_elegibilidade) quanto para o questionário.
+#   resposta_ok: resposta que mantém a elegibilidade ("sim"/"não"); None para
+#     perguntas-porta que só controlam a exibição de outra (foi_diretor_iv).
+#   consequencia_falha: "inelegivel" (critério objetivo da norma) ou "ctrh"
+#     (ponto ambíguo/documentado — encaminhar à CTRH, nunca negativa
+#     categórica por conta própria).
+#   depende_de: (id, valor) — a pergunta só se aplica se a outra tiver essa
+#     resposta; caso contrário entra como "x" (não se aplica) na chave.
+CRITERIOS_ELEGIBILIDADE = [
+    {
+        "id": "pleno_exercicio",
+        "texto": "Você esteve em **pleno exercício** na SME-RJ por pelo menos "
+        "**¾ (três quartos)** do ano letivo de 2026?",
+        "rotulo_curto": "pleno exercício por ¾ do ano letivo",
+        "resposta_ok": "sim",
+        "consequencia_falha": "inelegivel",
+        "nota": None,
+        "depende_de": None,
+    },
+    {
+        "id": "lotacao_ue",
+        "texto": "Você esteve **lotado** em Unidade Escolar, Unidade de "
+        "Extensão e/ou Biblioteca Escolar em 2026?",
+        "rotulo_curto": "lotação em Unidade Escolar, Extensão ou Biblioteca",
+        "resposta_ok": "sim",
+        "consequencia_falha": "inelegivel",
+        "nota": None,
+        "depende_de": None,
+    },
+    {
+        "id": "elegivel_ar",
+        "texto": "Você é elegível à gratificação do **Acordo de Resultados (AR)**?",
+        "rotulo_curto": "não ser elegível ao Acordo de Resultados (AR)",
+        "resposta_ok": "não",
+        "consequencia_falha": "inelegivel",
+        "nota": None,
+        "depende_de": None,
+    },
+    {
+        "id": "penalidade",
+        "texto": "Você sofreu **penalidade disciplinar** durante o período de apuração?",
+        "rotulo_curto": "não ter sofrido penalidade disciplinar",
+        "resposta_ok": "não",
+        "consequencia_falha": "inelegivel",
+        "nota": None,
+        "depende_de": None,
+    },
+    {
+        "id": "exonerado",
+        "texto": "Você foi **exonerado com perda do vínculo ou demitido** "
+        "antes da data de pagamento da gratificação?",
+        "rotulo_curto": "não ter sido exonerado/demitido antes do pagamento",
+        "resposta_ok": "não",
+        "consequencia_falha": "inelegivel",
+        "nota": None,
+        "depende_de": None,
+    },
+    {
+        "id": "falta",
+        "texto": "Você **apresentou falta** em 2026?",
+        "rotulo_curto": "ter apresentado falta em 2026 (a norma não detalha quantidade/tipo)",
+        "resposta_ok": "não",
+        "consequencia_falha": "ctrh",
+        "nota": "O texto da norma não detalha quantidade nem tipo de falta.",
+        "depende_de": None,
+    },
+    {
+        "id": "foi_diretor_iv",
+        "texto": "Você foi **Diretor IV** em algum momento de 2026?",
+        "rotulo_curto": "ter sido Diretor IV",
+        "resposta_ok": None,
+        "consequencia_falha": None,
+        "nota": None,
+        "depende_de": None,
+    },
+    {
+        "id": "gestor_insatisfatorio",
+        "texto": "Você teve **resultado insatisfatório** na última avaliação do "
+        "Programa de Avaliação Periódica de Desempenho e Competências para "
+        "Gestores das Unidades Escolares?",
+        "rotulo_curto": "resultado da avaliação de gestores (Diretor IV)",
+        "resposta_ok": "não",
+        "consequencia_falha": "ctrh",
+        "nota": None,
+        "depende_de": ("foi_diretor_iv", "sim"),
+    },
+]
+
+DISCLAIMER_ELEGIBILIDADE = (
+    "⚠️ Este resultado é apenas **orientativo**, gerado a partir das suas "
+    "respostas — quem verifica os registros funcionais e decide a "
+    "elegibilidade é a SME, conforme a Resolução. Em caso de dúvida, procure "
+    "a **CTRH da sua CRE**."
+)
+
+
+def avaliar_elegibilidade(respostas: dict[str, str]) -> tuple[str, list[str]]:
+    """Avalia as respostas do questionário de elegibilidade.
+
+    `respostas` mapeia id do critério -> "sim"/"não"; critérios não
+    aplicáveis (depende_de não satisfeito) devem ser omitidos.
+
+    Devolve `(resultado, ids_falhos)`, com resultado em:
+    - "atende": nenhuma falha;
+    - "ctrh": só falhas em pontos ambíguos — confirmar com a CTRH;
+    - "inelegivel": ao menos um critério objetivo da norma não atendido.
+    """
+    falhas = []
+    for criterio in CRITERIOS_ELEGIBILIDADE:
+        if criterio["resposta_ok"] is None:
+            continue
+        resposta = respostas.get(criterio["id"])
+        if resposta is None:
+            continue  # não aplicável
+        if resposta != criterio["resposta_ok"]:
+            falhas.append(criterio)
+
+    if any(c["consequencia_falha"] == "inelegivel" for c in falhas):
+        resultado = "inelegivel"
+    elif falhas:
+        resultado = "ctrh"
+    else:
+        resultado = "atende"
+    return resultado, [c["id"] for c in falhas]
+
+
+def conclusao_elegibilidade_markdown(respostas: dict[str, str]) -> tuple[str, str]:
+    """Markdown da conclusão personalizada do questionário.
+
+    Devolve `(resultado, markdown)` — o resultado permite ao build escolher a
+    classe visual do alerta. Toda conclusão embute o disclaimer de que a
+    decisão é da SME.
+    """
+    resultado, ids_falhos = avaliar_elegibilidade(respostas)
+    por_id = {c["id"]: c for c in CRITERIOS_ELEGIBILIDADE}
+    falhos = [por_id[i] for i in ids_falhos]
+
+    if resultado == "atende":
+        corpo = (
+            "✅ **Pelas suas respostas, você atende aos critérios de "
+            "elegibilidade da PRA 2026.**"
+        )
+    elif resultado == "ctrh":
+        pontos = "; ".join(c["rotulo_curto"] for c in falhos)
+        corpo = (
+            "🟡 **Seu caso depende de confirmação com a CTRH da sua CRE.** "
+            f"Ponto(s) a confirmar: {pontos}. O texto da Resolução não "
+            "permite uma resposta categórica nesses pontos."
+        )
+    else:
+        objetivos = [c for c in falhos if c["consequencia_falha"] == "inelegivel"]
+        pontos = "; ".join(c["rotulo_curto"] for c in objetivos)
+        corpo = (
+            "❌ **Pelas suas respostas, você NÃO atende aos critérios de "
+            f"elegibilidade da PRA 2026.** Critério(s) não atendido(s): {pontos}."
+        )
+        ambiguos = [c for c in falhos if c["consequencia_falha"] == "ctrh"]
+        if ambiguos:
+            corpo += (
+                " Há ainda ponto(s) que dependeriam de confirmação com a "
+                "CTRH: " + "; ".join(c["rotulo_curto"] for c in ambiguos) + "."
+            )
+
+    return resultado, f"{corpo}\n\n{DISCLAIMER_ELEGIBILIDADE}"
+
+
+def combinacoes_respostas_elegibilidade():
+    """Gera todas as combinações possíveis de respostas do questionário.
+
+    Cada item é `(chave, respostas)`: a chave tem um caractere por pergunta,
+    na ordem de CRITERIOS_ELEGIBILIDADE — "s" (sim), "n" (não) ou "x" (não se
+    aplica, quando depende_de não é satisfeito). Usada pelo build para
+    pré-computar a tabela de conclusões e pelos testes de paridade.
+
+    O espaço cresce 2^n com o número de perguntas — se o questionário passar
+    de ~10, trocar a tabela por lógica no JS com teste de paridade via Node.
+    """
+    combinacoes = [("", {})]
+    for criterio in CRITERIOS_ELEGIBILIDADE:
+        novas = []
+        for chave, respostas in combinacoes:
+            dependencia = criterio["depende_de"]
+            if dependencia is not None and respostas.get(dependencia[0]) != dependencia[1]:
+                novas.append((chave + "x", respostas))
+                continue
+            for letra, valor in (("s", "sim"), ("n", "não")):
+                novas.append((chave + letra, {**respostas, criterio["id"]: valor}))
+        combinacoes = novas
+    return combinacoes
+
+
+def questionario_elegibilidade() -> dict:
+    """Estrutura pública do questionário interativo de elegibilidade.
+
+    Só perguntas e textos — sem resposta_ok/consequencia: o JS não interpreta
+    critérios, apenas monta a chave de respostas e consulta a tabela de
+    conclusões pré-computada no build.
+    """
+    return {
+        "intro": (
+            "Responda às perguntas abaixo sobre o seu ano letivo de 2026 para "
+            "ver uma orientação personalizada. Nada é enviado ou registrado — "
+            "as respostas ficam só no seu aparelho."
+        ),
+        "perguntas": [
+            {
+                "id": c["id"],
+                "texto": c["texto"],
+                "nota": c["nota"],
+                "depende_de": list(c["depende_de"]) if c["depende_de"] else None,
+            }
+            for c in CRITERIOS_ELEGIBILIDADE
+        ],
+        "disclaimer": DISCLAIMER_ELEGIBILIDADE,
+    }
+
+
 def explicar_elegibilidade() -> str:
     """Markdown com o checklist de elegibilidade individual (Arts. 7º e 8º),
-    em forma de pergunta direta ao servidor."""
+    em forma de pergunta direta ao servidor. Derivado dos mesmos critérios
+    do questionário interativo (CRITERIOS_ELEGIBILIDADE)."""
+    linhas = []
+    for criterio in CRITERIOS_ELEGIBILIDADE:
+        if criterio["resposta_ok"] is None or criterio["depende_de"] is not None:
+            continue  # a condição do Diretor IV é tratada à parte, abaixo
+        simbolo = "✅" if criterio["resposta_ok"] == "sim" else "❌"
+        nota = f" *({criterio['nota'].rstrip('.')})*" if criterio["nota"] else ""
+        linhas.append(f"- {simbolo} {criterio['texto']}{nota}")
+    checklist = "\n".join(linhas)
     return (
         "A PRA só é devida se você atender a **todos** os critérios abaixo, "
         "referentes ao ano letivo de 2026:\n\n"
-        "- ✅ Você esteve em **pleno exercício** na SME-RJ por pelo menos "
-        "**¾ (três quartos)** do ano letivo de 2026?\n"
-        "- ✅ Você esteve **lotado** em Unidade Escolar, Unidade de Extensão "
-        "e/ou Biblioteca Escolar em 2026?\n"
-        "- ❌ Você é elegível à gratificação do **Acordo de Resultados (AR)**?\n"
-        "- ❌ Você sofreu **penalidade disciplinar** durante o período de apuração?\n"
-        "- ❌ Você foi **exonerado com perda do vínculo ou demitido** antes da "
-        "data de pagamento da gratificação?\n"
-        "- ❌ Você **apresentou falta** em 2026? *(o texto da norma não detalha "
-        "quantidade/tipo)*\n\n"
+        f"{checklist}\n\n"
         "As marcadas com ✅ precisam ser \"sim\"; as marcadas com ❌ precisam "
         "ser \"não\".\n\n"
         "**Se você foi Diretor IV em algum momento de 2026:** há uma condição "

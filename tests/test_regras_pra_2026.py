@@ -11,10 +11,14 @@ import pytest
 from src.dados import carregar_unidades
 from src.faq import FAQ, faq_visivel
 from src.regras_pra_2026 import (
+    CRITERIOS_ELEGIBILIDADE,
     GLOSSARIO,
     PENDENCIAS_VERIFICACAO,
+    avaliar_elegibilidade,
     cargos_disponiveis,
     classificar_fator_geral,
+    combinacoes_respostas_elegibilidade,
+    conclusao_elegibilidade_markdown,
     explicar_elegibilidade,
     explicar_fator_geral,
     explicar_formula_final,
@@ -22,6 +26,7 @@ from src.regras_pra_2026 import (
     explicar_professor,
     formatar_cre,
     pendencias_verificacao_markdown,
+    questionario_elegibilidade,
 )
 
 
@@ -148,6 +153,114 @@ def test_explicar_elegibilidade_nao_quebra():
     texto = explicar_elegibilidade()
     assert "¾" in texto
     assert "Diretor IV" in texto
+
+
+# Respostas que atendem a todos os critérios (sem ter sido Diretor IV).
+RESPOSTAS_TUDO_OK = {
+    "pleno_exercicio": "sim",
+    "lotacao_ue": "sim",
+    "elegivel_ar": "não",
+    "penalidade": "não",
+    "exonerado": "não",
+    "falta": "não",
+    "foi_diretor_iv": "não",
+}
+
+
+def test_avaliar_elegibilidade_tudo_ok_atende():
+    resultado, falhos = avaliar_elegibilidade(RESPOSTAS_TUDO_OK)
+    assert resultado == "atende"
+    assert falhos == []
+
+
+def test_avaliar_elegibilidade_ar_torna_inelegivel():
+    respostas = {**RESPOSTAS_TUDO_OK, "elegivel_ar": "sim"}
+    resultado, falhos = avaliar_elegibilidade(respostas)
+    assert resultado == "inelegivel"
+    assert falhos == ["elegivel_ar"]
+
+
+def test_avaliar_elegibilidade_falta_encaminha_para_ctrh():
+    respostas = {**RESPOSTAS_TUDO_OK, "falta": "sim"}
+    resultado, falhos = avaliar_elegibilidade(respostas)
+    assert resultado == "ctrh"
+    assert falhos == ["falta"]
+
+
+def test_avaliar_elegibilidade_diretor_iv_insatisfatorio_vai_para_ctrh():
+    respostas = {
+        **RESPOSTAS_TUDO_OK,
+        "foi_diretor_iv": "sim",
+        "gestor_insatisfatorio": "sim",
+    }
+    resultado, falhos = avaliar_elegibilidade(respostas)
+    assert resultado == "ctrh"
+    assert falhos == ["gestor_insatisfatorio"]
+
+
+def test_avaliar_elegibilidade_inelegivel_tem_precedencia_sobre_ctrh():
+    respostas = {**RESPOSTAS_TUDO_OK, "penalidade": "sim", "falta": "sim"}
+    resultado, falhos = avaliar_elegibilidade(respostas)
+    assert resultado == "inelegivel"
+    assert set(falhos) == {"penalidade", "falta"}
+
+
+def test_avaliar_elegibilidade_lista_todas_as_falhas():
+    respostas = {**RESPOSTAS_TUDO_OK, "pleno_exercicio": "não", "exonerado": "sim"}
+    resultado, falhos = avaliar_elegibilidade(respostas)
+    assert resultado == "inelegivel"
+    assert set(falhos) == {"pleno_exercicio", "exonerado"}
+
+
+def test_conclusao_sempre_contem_disclaimer():
+    for respostas in (
+        RESPOSTAS_TUDO_OK,
+        {**RESPOSTAS_TUDO_OK, "falta": "sim"},
+        {**RESPOSTAS_TUDO_OK, "elegivel_ar": "sim"},
+    ):
+        _, markdown = conclusao_elegibilidade_markdown(respostas)
+        assert "orientativo" in markdown
+        assert "CTRH" in markdown
+
+
+def test_conclusao_inelegivel_menciona_tambem_pontos_ctrh():
+    respostas = {**RESPOSTAS_TUDO_OK, "penalidade": "sim", "falta": "sim"}
+    resultado, markdown = conclusao_elegibilidade_markdown(respostas)
+    assert resultado == "inelegivel"
+    assert "penalidade" in markdown
+    assert "falta" in markdown
+
+
+def test_combinacoes_respostas_cobrem_todo_o_espaco():
+    combinacoes = combinacoes_respostas_elegibilidade()
+    chaves = [chave for chave, _ in combinacoes]
+    assert len(chaves) == len(set(chaves)), "chaves duplicadas"
+    n_perguntas = len(CRITERIOS_ELEGIBILIDADE)
+    assert all(len(chave) == n_perguntas for chave in chaves)
+    # 6 independentes + foi_diretor_iv: quando "não", a condicional vira "x";
+    # quando "sim", desdobra em sim/não -> 2^6 * (1 + 2) = 192 combinações.
+    assert len(chaves) == 192
+    # O "x" só pode aparecer na posição da pergunta condicional.
+    posicoes_condicionais = {
+        i for i, c in enumerate(CRITERIOS_ELEGIBILIDADE) if c["depende_de"]
+    }
+    for chave in chaves:
+        for i, letra in enumerate(chave):
+            assert letra in ("s", "n", "x")
+            if letra == "x":
+                assert i in posicoes_condicionais
+
+
+def test_questionario_elegibilidade_espelha_criterios():
+    questionario = questionario_elegibilidade()
+    assert [p["id"] for p in questionario["perguntas"]] == [
+        c["id"] for c in CRITERIOS_ELEGIBILIDADE
+    ]
+    # O contrato público não expõe a interpretação dos critérios.
+    for pergunta in questionario["perguntas"]:
+        assert "resposta_ok" not in pergunta
+        assert "consequencia_falha" not in pergunta
+    assert "CTRH" in questionario["disclaimer"]
 
 
 def test_explicar_formula_final_contem_formula():
