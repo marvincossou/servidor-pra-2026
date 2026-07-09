@@ -43,6 +43,10 @@
     conteudoNotaIndicador: document.getElementById("conteudo-nota-indicador"),
     conteudoFormulaFinal: document.getElementById("conteudo-formula-final"),
     conteudoElegibilidade: document.getElementById("conteudo-elegibilidade"),
+    questionarioIntro: document.getElementById("questionario-intro"),
+    questionarioForm: document.getElementById("questionario-elegibilidade"),
+    conclusaoElegibilidade: document.getElementById("conclusao-elegibilidade"),
+    disclaimerElegibilidade: document.getElementById("disclaimer-elegibilidade"),
     faqLista: document.getElementById("faq-lista"),
     rodapeFonte: document.getElementById("rodape-fonte"),
     rodapeDadosDe: document.getElementById("rodape-dados-de"),
@@ -404,6 +408,7 @@
     els.conteudoNotaIndicador.innerHTML = dados.estaticos.nota_indicador_html;
     els.conteudoFormulaFinal.innerHTML = dados.estaticos.formula_final_html;
     els.conteudoElegibilidade.innerHTML = dados.estaticos.elegibilidade_html;
+    renderQuestionarioElegibilidade();
 
     els.faqLista.innerHTML = "";
     for (const item of faq) {
@@ -417,6 +422,96 @@
       details.appendChild(div);
       els.faqLista.appendChild(details);
     }
+  }
+
+  // O questionário não contém regra de negócio: as perguntas, a tabela de
+  // conclusões e os textos vêm prontos do build Python (estaticos.json).
+  // Aqui só se monta a chave de respostas ("s"/"n"/"x") e se faz o lookup.
+  function renderQuestionarioElegibilidade() {
+    const q = dados.estaticos.questionario_elegibilidade;
+    els.questionarioIntro.innerHTML = q.intro_html;
+    els.disclaimerElegibilidade.innerHTML = q.disclaimer_html;
+
+    els.questionarioForm.innerHTML = "";
+    for (const pergunta of q.perguntas) {
+      const fieldset = document.createElement("fieldset");
+      fieldset.className = "cartoes-radio cartoes-radio-inline";
+      fieldset.dataset.perguntaId = pergunta.id;
+      if (pergunta.depende_de) fieldset.hidden = true;
+
+      const legend = document.createElement("legend");
+      legend.innerHTML = pergunta.texto_html;
+      if (pergunta.nota) {
+        const nota = document.createElement("small");
+        nota.className = "questionario-nota";
+        nota.textContent = pergunta.nota;
+        legend.appendChild(nota);
+      }
+      fieldset.appendChild(legend);
+
+      for (const [valor, rotulo] of [["s", "Sim"], ["n", "Não"]]) {
+        const label = document.createElement("label");
+        label.className = "cartao-radio";
+        const radio = document.createElement("input");
+        radio.type = "radio";
+        radio.name = `eleg-${pergunta.id}`;
+        radio.value = valor;
+        label.appendChild(radio);
+        label.appendChild(document.createTextNode(rotulo));
+        fieldset.appendChild(label);
+      }
+      els.questionarioForm.appendChild(fieldset);
+    }
+
+    els.questionarioForm.addEventListener("change", atualizarConclusaoElegibilidade);
+  }
+
+  function atualizarConclusaoElegibilidade() {
+    const q = dados.estaticos.questionario_elegibilidade;
+
+    const respostas = {};
+    for (const pergunta of q.perguntas) {
+      const marcado = els.questionarioForm.querySelector(
+        `input[name="eleg-${pergunta.id}"]:checked`
+      );
+      respostas[pergunta.id] = marcado ? marcado.value : null;
+    }
+
+    let chave = "";
+    let faltam = 0;
+    let respondidas = 0;
+    for (const pergunta of q.perguntas) {
+      const fieldset = els.questionarioForm.querySelector(
+        `fieldset[data-pergunta-id="${pergunta.id}"]`
+      );
+      let aplicavel = true;
+      if (pergunta.depende_de) {
+        const [idPai, valorPai] = pergunta.depende_de;
+        aplicavel = respostas[idPai] === (valorPai === "sim" ? "s" : "n");
+        fieldset.hidden = !aplicavel;
+        if (!aplicavel && respostas[pergunta.id]) {
+          const marcado = fieldset.querySelector("input:checked");
+          if (marcado) marcado.checked = false;
+          respostas[pergunta.id] = null;
+        }
+      }
+      if (!aplicavel) {
+        chave += "x";
+      } else if (respostas[pergunta.id]) {
+        chave += respostas[pergunta.id];
+        respondidas += 1;
+      } else {
+        faltam += 1;
+      }
+    }
+
+    if (faltam > 0) {
+      els.conclusaoElegibilidade.innerHTML = respondidas
+        ? `<div class="alerta alerta-info">Responda mais ${faltam} pergunta(s) para ver a orientação.</div>`
+        : "";
+      return;
+    }
+    els.conclusaoElegibilidade.innerHTML = q.conclusoes[q.tabela[chave]] || "";
   }
 
   function mostrarToastAtualizacao(registro) {

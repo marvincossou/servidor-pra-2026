@@ -360,6 +360,33 @@ summary {
 
 .cartao-radio input { width: 18px; height: 18px; }
 
+#questionario-elegibilidade .cartoes-radio-inline {
+  flex-direction: row;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+#questionario-elegibilidade .cartoes-radio-inline legend {
+  width: 100%;
+}
+
+#questionario-elegibilidade .cartoes-radio-inline .cartao-radio {
+  flex: 1 1 120px;
+  justify-content: center;
+}
+
+#questionario-elegibilidade legend p {
+  display: inline;
+  margin: 0;
+}
+
+.questionario-nota {
+  display: block;
+  font-weight: 400;
+  color: var(--texto-suave);
+  margin-top: 2px;
+}
+
 #select-etapa-container { margin-bottom: 16px; }
 #select-etapa-container label { display: block; font-weight: 600; margin-bottom: 6px; }
 #select-etapa {
