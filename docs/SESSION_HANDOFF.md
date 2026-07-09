@@ -3,8 +3,27 @@
 ## Status (2026-07-09)
 
 MVP da PRA 2026 + busca por assunto respondida por IA (Groq), citando a
-legislação. Netlify conectado ao GitHub (deploy contínuo) e `GROQ_API_KEY`
-já configurada em produção — testado ao vivo e funcionando.
+legislação, com botão de lupa sempre visível e — quando o servidor já
+buscou a escola dele — resposta personalizada pelo cargo/perfil da unidade.
+Netlify conectado ao GitHub (deploy contínuo) e `GROQ_API_KEY` já
+configurada em produção — tudo testado ao vivo e funcionando.
+
+## Busca por IA personalizada pela escola/cargo — 2026-07-09
+
+Quando o servidor já selecionou a escola dele (estado `unidadeAtual` em
+`pwa/js/app.js`), `perguntarIA()` monta `contextoUnidade` com a
+designação/denominação da escola e o texto já renderizado em
+`els.conteudoCaso` (mesmo texto que a aba "Meu caso" mostra — Fator Geral ou
+regra do cargo/etapa selecionado). Esse contexto vai no corpo da
+requisição (`contexto_unidade`) para `netlify/functions/perguntar.js`, que
+valida (`validarContextoUnidade`: precisa ser strings não vazias, corta em
+2000 caracteres) e injeta no prompt de sistema (`montarPromptSistema`) só
+quando presente. Sem escola selecionada, `contexto_unidade` vai `null` e o
+comportamento é idêntico ao de antes (resposta genérica). Testado ao vivo
+via `curl` na function em produção — resposta reflete corretamente o
+cargo/etapa informado, sempre citando a fonte, sem valores monetários.
+Reaproveita o texto já gerado pelo motor Python (`src/regras_pra_2026.py`)
+— nenhuma regra é duplicada ou reinventada em JS.
 
 ## Busca por assunto: só IA (sem TF-IDF client-side) — 2026-07-09
 
