@@ -45,7 +45,6 @@
     tabelaAusenciasCorpo: document.getElementById("tabela-ausencias-corpo"),
     ausenciasSemResultado: document.getElementById("ausencias-sem-resultado"),
     faqLista: document.getElementById("faq-lista"),
-    transparenciaLista: document.getElementById("transparencia-lista"),
     rodapeFonte: document.getElementById("rodape-fonte"),
     rodapeDadosDe: document.getElementById("rodape-dados-de"),
     rodapeInstalar: document.getElementById("rodape-instalar"),
@@ -390,7 +389,6 @@
     els.conteudoFormulaFinal.innerHTML = dados.estaticos.formula_final_html;
     els.conteudoElegibilidade.innerHTML = dados.estaticos.elegibilidade_html;
     els.conteudoAusenciasIntro.innerHTML = dados.estaticos.ausencias_intro_html;
-    els.transparenciaLista.innerHTML = dados.estaticos.pendencias_verificacao_html;
     renderTabelaAusencias("");
 
     els.faqLista.innerHTML = "";
